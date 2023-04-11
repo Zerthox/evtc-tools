@@ -22,7 +22,11 @@ pub fn extract_casts(
 
     for event in &log.events {
         let id = event.skill_id;
-        if id == skill_filter && Some(event.src_agent as u64) == agent_filter {
+        if id == skill_filter
+            && agent_filter
+                .map(|id| event.src_agent as u64 == id)
+                .unwrap_or(true)
+        {
             match event {
                 CombatEvent {
                     is_statechange: StateChange::None,
