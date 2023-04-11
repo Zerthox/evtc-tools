@@ -5,8 +5,20 @@ pub use cast::{Agent, Cast, Hit};
 use arcdps_parse::{self as arcdps, Activation, BuffRemove, CombatEvent, Log, Skill, StateChange};
 use std::collections::HashMap;
 
-pub fn extract_casts(log: &Log, skill_filter: u32, agent_filter: Option<u64>) -> Vec<Cast> {
+#[derive(Debug, Clone)]
+pub struct HitWithoutCast {
+    pub id: u32,
+    pub agent: u64,
+    pub time: u64,
+}
+
+pub fn extract_casts(
+    log: &Log,
+    skill_filter: u32,
+    agent_filter: Option<u64>,
+) -> (Vec<Cast>, Vec<HitWithoutCast>) {
     let mut casts = HashMap::<_, Vec<_>>::new();
+    let mut hits_without_cast = Vec::new();
 
     for event in &log.events {
         let id = event.skill_id;
@@ -35,13 +47,11 @@ pub fn extract_casts(log: &Log, skill_filter: u32, agent_filter: Option<u64>) ->
                     let agent_id = event.src_agent as u64;
                     match casts.get_mut(&agent_id).and_then(|casts| casts.last_mut()) {
                         Some(cast) => cast.add_hit(event.result.into(), event.value, event.time),
-                        None => {
-                            // TODO: logging
-                            eprintln!(
-                                "hit of skill {} from agent {} at time {} without prior cast",
-                                id, agent_id, event.time
-                            );
-                        }
+                        None => hits_without_cast.push(HitWithoutCast {
+                            id,
+                            agent: agent_id,
+                            time: event.time,
+                        }),
                     }
                 }
 
@@ -50,9 +60,10 @@ pub fn extract_casts(log: &Log, skill_filter: u32, agent_filter: Option<u64>) ->
         }
     }
 
-    let mut result: Vec<_> = casts.into_iter().flat_map(|(_, cast)| cast).collect();
-    result.sort_by_key(|cast| cast.time);
-    result
+    let mut casts: Vec<_> = casts.into_iter().flat_map(|(_, cast)| cast).collect();
+    casts.sort_by_key(|cast| cast.time);
+
+    (casts, hits_without_cast)
 }
 
 pub fn skill_name(skills: &[Skill], id: u32) -> Option<&str> {

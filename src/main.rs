@@ -1,4 +1,4 @@
-use arcdps_hit_times::{extract_casts, skill_name, until_null};
+use arcdps_hit_times::{agent_name, extract_casts, skill_name, until_null};
 use arcdps_parse::{Log, Parse};
 use clap::Parser;
 use std::{
@@ -48,7 +48,7 @@ fn main() {
     let mut log = Log::parse(&mut file).expect("failed to parse EVTC log");
     log.events.sort_by_key(|event| event.time);
 
-    let skill_name = skill_name(&log.skills, args.skill).unwrap_or("");
+    let skill_name = skill_name(&log.skills, args.skill).unwrap_or_default();
 
     let agent_filter = args.agent.as_deref().map(|name| {
         log.agents
@@ -64,10 +64,23 @@ fn main() {
         args.skill,
         args.agent.as_deref().unwrap_or("all agents")
     );
-    let casts = extract_casts(&log, args.skill, agent_filter);
-    println!("Found {} casts", casts.len());
+    let (casts, hits_without_cast) = extract_casts(&log, args.skill, agent_filter);
+
+    for info in &hits_without_cast {
+        eprintln!(
+            "Hit from \"{}\" ({}) at time {} without prior cast",
+            agent_name(&log.agents, info.agent).unwrap_or_default(),
+            info.agent,
+            info.time
+        );
+    }
+    println!(
+        "Found {} casts and {} hits without cast",
+        casts.len(),
+        hits_without_cast.len()
+    );
 
     let output = BufWriter::new(File::create(&out).expect("failed to create output file"));
     serde_json::to_writer_pretty(output, &casts).expect("failed to serialize cast data");
-    println!("Saved data to \"{}\"", out.display());
+    println!("Saved cast data to \"{}\"", out.display());
 }
