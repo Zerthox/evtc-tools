@@ -5,12 +5,12 @@ pub use cast::{Agent, Cast, Hit};
 use arcdps_parse::{self as arcdps, Activation, BuffRemove, CombatEvent, Log, Skill, StateChange};
 use std::collections::HashMap;
 
-pub fn extract_casts(log: &Log, skill: u32) -> Vec<Cast> {
+pub fn extract_casts(log: &Log, skill_filter: u32, agent_filter: Option<u64>) -> Vec<Cast> {
     let mut casts = HashMap::<_, Vec<_>>::new();
 
     for event in &log.events {
         let id = event.skill_id;
-        if id == skill {
+        if id == skill_filter && Some(event.src_agent as u64) == agent_filter {
             match event {
                 CombatEvent {
                     is_statechange: StateChange::None,
@@ -58,7 +58,7 @@ pub fn extract_casts(log: &Log, skill: u32) -> Vec<Cast> {
     result
 }
 
-fn skill_name(skills: &[Skill], id: u32) -> Option<&str> {
+pub fn skill_name(skills: &[Skill], id: u32) -> Option<&str> {
     skills.iter().find_map(|skill| {
         if skill.id == id {
             Some(until_null(&skill.name))
@@ -68,7 +68,7 @@ fn skill_name(skills: &[Skill], id: u32) -> Option<&str> {
     })
 }
 
-fn agent_name(agents: &[arcdps::Agent], id: u64) -> Option<&str> {
+pub fn agent_name(agents: &[arcdps::Agent], id: u64) -> Option<&str> {
     agents.iter().find_map(|agent| {
         if agent.address == id {
             Some(until_null(&agent.name))
@@ -78,7 +78,7 @@ fn agent_name(agents: &[arcdps::Agent], id: u64) -> Option<&str> {
     })
 }
 
-fn until_null(string: &str) -> &str {
+pub fn until_null(string: &str) -> &str {
     let end = string.find('\0').unwrap_or(string.len());
     &string[..end]
 }
