@@ -34,10 +34,7 @@ pub fn extract_casts(log: &Log, skill_filter: u32, agent_filter: Option<u64>) ->
                     // direct damage
                     let agent_id = event.src_agent as u64;
                     match casts.get_mut(&agent_id).and_then(|casts| casts.last_mut()) {
-                        Some(cast) => {
-                            cast.hits
-                                .push(Hit::new(event.result.into(), event.value, event.time))
-                        }
+                        Some(cast) => cast.add_hit(event.result.into(), event.value, event.time),
                         None => {
                             // TODO: logging
                             eprintln!(

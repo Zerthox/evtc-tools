@@ -20,6 +20,14 @@ impl Cast {
             hits: Vec::new(),
         }
     }
+
+    pub fn add_hit(&mut self, kind: Strike, damage: i32, time: u64) {
+        self.hits.push(Hit {
+            kind,
+            damage,
+            time: time.saturating_sub(self.time),
+        });
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,10 +50,4 @@ pub struct Hit {
     pub kind: Strike,
     pub damage: i32,
     pub time: u64,
-}
-
-impl Hit {
-    pub fn new(kind: Strike, damage: i32, time: u64) -> Self {
-        Self { kind, time, damage }
-    }
 }
