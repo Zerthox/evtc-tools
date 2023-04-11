@@ -27,6 +27,7 @@ pub fn extract_casts(
                 .map(|id| event.src_agent as u64 == id)
                 .unwrap_or(true)
         {
+            // TODO: include quickness gained/lost?
             match event {
                 CombatEvent {
                     is_statechange: StateChange::None,

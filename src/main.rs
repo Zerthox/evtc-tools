@@ -15,9 +15,9 @@ pub struct Args {
     /// Path to input file.
     pub input: PathBuf,
 
-    /// Id of skill to extract data for.
+    /// Id or name of skill to extract data for.
     #[clap(short, long)]
-    pub skill: u32,
+    pub skill: String,
 
     /// Name of agent to filter data for.
     #[clap(short, long)]
@@ -48,7 +48,17 @@ fn main() {
     let mut log = Log::parse(&mut file).expect("failed to parse EVTC log");
     log.events.sort_by_key(|event| event.time);
 
-    let skill_name = skill_name(&log.skills, args.skill).unwrap_or_default();
+    let (skill_id, skill_name) = if let Ok(id) = args.skill.parse() {
+        let name = skill_name(&log.skills, id).unwrap_or_default();
+        (id, name)
+    } else {
+        let skill = log
+            .skills
+            .iter()
+            .find(|skill| until_null(&skill.name) == args.skill)
+            .unwrap_or_else(|| panic!("Skill \"{}\" not found", args.skill));
+        (skill.id, args.skill.as_str())
+    };
 
     let agent_filter = args.agent.as_deref().map(|name| {
         log.agents
@@ -64,7 +74,7 @@ fn main() {
         args.skill,
         args.agent.as_deref().unwrap_or("all agents")
     );
-    let (casts, hits_without_cast) = extract_casts(&log, args.skill, agent_filter);
+    let (casts, hits_without_cast) = extract_casts(&log, skill_id, agent_filter);
 
     for info in &hits_without_cast {
         eprintln!(
