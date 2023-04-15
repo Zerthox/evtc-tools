@@ -1,4 +1,4 @@
-use arcdps_hit_times::{agent_name, extract_casts, skill_name, until_null};
+use arcdps_hit_times::{agent_name, extract_casts, skill_name};
 use arcdps_parse::{Log, Parse};
 use clap::Parser;
 use std::{
@@ -55,7 +55,7 @@ fn main() {
         let skill = log
             .skills
             .iter()
-            .find(|skill| until_null(&skill.name) == args.skill)
+            .find(|skill| skill.name == args.skill)
             .unwrap_or_else(|| panic!("Skill \"{}\" not found", args.skill));
         (skill.id, args.skill.as_str())
     };
@@ -63,7 +63,7 @@ fn main() {
     let agent_filter = args.agent.as_deref().map(|name| {
         log.agents
             .iter()
-            .find(|agent| until_null(&agent.name) == name)
+            .find(|agent| agent.name[0] == name)
             .map(|agent| agent.address)
             .unwrap_or_else(|| panic!("Did not find agent \"{}\"", name))
     });
@@ -79,7 +79,9 @@ fn main() {
     for info in &hits_without_cast {
         eprintln!(
             "Hit from \"{}\" ({}) at time {} without prior cast",
-            agent_name(&log.agents, info.agent).unwrap_or_default(),
+            agent_name(&log.agents, info.agent)
+                .and_then(|names| names.first().map(|name| name.as_str()))
+                .unwrap_or_default(),
             info.agent,
             info.time
         );

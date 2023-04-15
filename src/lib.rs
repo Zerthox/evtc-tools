@@ -12,6 +12,10 @@ pub struct HitWithoutCast {
     pub time: u64,
 }
 
+// TODO: include quickness gained/lost
+#[allow(unused)]
+const QUICKNESS: u32 = 1187;
+
 pub fn extract_casts(
     log: &Log,
     skill_filter: u32,
@@ -22,12 +26,7 @@ pub fn extract_casts(
 
     for event in &log.events {
         let id = event.skill_id;
-        if id == skill_filter
-            && agent_filter
-                .map(|id| event.src_agent as u64 == id)
-                .unwrap_or(true)
-        {
-            // TODO: include quickness gained/lost?
+        if id == skill_filter && agent_filter.map(|id| event.src_agent == id).unwrap_or(true) {
             match event {
                 CombatEvent {
                     is_statechange: StateChange::None,
@@ -35,8 +34,11 @@ pub fn extract_casts(
                     ..
                 } => {
                     // activation start
-                    let agent_id = event.src_agent as u64;
-                    let agent = Agent::new(agent_id, agent_name(&log.agents, agent_id));
+                    let agent_id = event.src_agent;
+                    let agent = Agent::new(
+                        agent_id,
+                        agent_name(&log.agents, agent_id).and_then(|names| names.first()),
+                    );
                     let cast = Cast::new(id, skill_name(&log.skills, id), agent, event.time);
                     casts.entry(agent_id).or_default().push(cast);
                 }
@@ -49,7 +51,7 @@ pub fn extract_casts(
                     ..
                 } => {
                     // direct damage
-                    let agent_id = event.src_agent as u64;
+                    let agent_id = event.src_agent;
                     match casts.get_mut(&agent_id).and_then(|casts| casts.last_mut()) {
                         Some(cast) => cast.add_hit(event.result.into(), event.value, event.time),
                         None => hits_without_cast.push(HitWithoutCast {
@@ -74,24 +76,19 @@ pub fn extract_casts(
 pub fn skill_name(skills: &[Skill], id: u32) -> Option<&str> {
     skills.iter().find_map(|skill| {
         if skill.id == id {
-            Some(until_null(&skill.name))
+            Some(skill.name.as_str())
         } else {
             None
         }
     })
 }
 
-pub fn agent_name(agents: &[arcdps::Agent], id: u64) -> Option<&str> {
+pub fn agent_name(agents: &[arcdps::Agent], id: u64) -> Option<&[String]> {
     agents.iter().find_map(|agent| {
         if agent.address == id {
-            Some(until_null(&agent.name))
+            Some(agent.name.as_slice())
         } else {
             None
         }
     })
-}
-
-pub fn until_null(string: &str) -> &str {
-    let end = string.find('\0').unwrap_or(string.len());
-    &string[..end]
 }
