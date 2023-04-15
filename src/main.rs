@@ -71,7 +71,7 @@ fn main() {
     println!(
         "Finding casts of skill \"{}\" ({}) for {}",
         skill_name,
-        args.skill,
+        skill_id,
         args.agent.as_deref().unwrap_or("all agents")
     );
     let (casts, hits_without_cast) = extract_casts(&log, skill_id, agent_filter);
