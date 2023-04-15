@@ -1,4 +1,4 @@
-use arcdps_hit_times::{agent_name, extract_casts, skill_name};
+use arcdps_hit_times::{agent_name, extract_casts};
 use arcdps_parse::{Log, Parse};
 use clap::Parser;
 use std::{
@@ -19,7 +19,7 @@ pub struct Args {
     #[clap(short, long)]
     pub skill: String,
 
-    /// Name of agent to filter data for.
+    /// Id or name of agent to filter data for.
     #[clap(short, long)]
     pub agent: Option<String>,
 
@@ -48,33 +48,36 @@ fn main() {
     let mut log = Log::parse(&mut file).expect("failed to parse EVTC log");
     log.events.sort_by_key(|event| event.time);
 
-    let (skill_id, skill_name) = if let Ok(id) = args.skill.parse() {
-        let name = skill_name(&log.skills, id).unwrap_or_default();
-        (id, name)
-    } else {
-        let skill = log
-            .skills
-            .iter()
-            .find(|skill| skill.name == args.skill)
-            .unwrap_or_else(|| panic!("Skill \"{}\" not found", args.skill));
-        (skill.id, args.skill.as_str())
-    };
+    let skill = log
+        .skills
+        .iter()
+        .find(|skill| match args.skill.parse::<u32>() {
+            Ok(id) => skill.id == id,
+            Err(_) => skill.name == args.skill,
+        })
+        .unwrap_or_else(|| panic!("Skill \"{}\" not found", args.skill));
 
-    let agent_filter = args.agent.as_deref().map(|name| {
+    let agent = args.agent.as_deref().map(|arg| {
         log.agents
             .iter()
-            .find(|agent| agent.name[0] == name)
-            .map(|agent| agent.address)
-            .unwrap_or_else(|| panic!("Did not find agent \"{}\"", name))
+            .find(|agent| match arg.parse::<u64>() {
+                Ok(id) => agent.address == id,
+                Err(_) => agent.name[0] == arg,
+            })
+            .unwrap_or_else(|| panic!("Agent \"{}\" not found", arg))
     });
 
     println!(
         "Finding casts of skill \"{}\" ({}) for {}",
-        skill_name,
-        skill_id,
-        args.agent.as_deref().unwrap_or("all agents")
+        skill.name,
+        skill.id,
+        agent
+            .map(|agent| format!("\"{}\" ({})", agent.name[0], agent.address))
+            .unwrap_or_else(|| "all agents".into())
     );
-    let (casts, hits_without_cast) = extract_casts(&log, skill_id, agent_filter);
+
+    let (casts, hits_without_cast) =
+        extract_casts(&log, skill.id, agent.map(|agent| agent.address));
 
     for info in &hits_without_cast {
         eprintln!(
