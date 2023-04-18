@@ -1,79 +1,35 @@
 mod cast;
+mod position;
 
-pub use cast::{Agent, Cast, Hit};
+pub use cast::*;
+pub use position::*;
 
-use arcdps_parse::{self as arcdps, Activation, BuffRemove, CombatEvent, Log, Skill, StateChange};
-use std::collections::HashMap;
+use arcdps_parse as arcdps;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
-pub struct HitWithoutCast {
-    pub id: u32,
-    pub agent: u64,
-    pub time: u64,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Agent {
+    pub id: u64,
+    pub name: Option<String>,
 }
 
-// TODO: include quickness gained/lost
-#[allow(unused)]
-const QUICKNESS: u32 = 1187;
-
-pub fn extract_casts(
-    log: &Log,
-    skill_filter: u32,
-    agent_filter: Option<u64>,
-) -> (Vec<Cast>, Vec<HitWithoutCast>) {
-    let mut casts = HashMap::<_, Vec<_>>::new();
-    let mut hits_without_cast = Vec::new();
-
-    for event in &log.events {
-        let id = event.skill_id;
-        if id == skill_filter && agent_filter.map(|id| event.src_agent == id).unwrap_or(true) {
-            match event {
-                CombatEvent {
-                    is_statechange: StateChange::None,
-                    is_activation: Activation::Start,
-                    ..
-                } => {
-                    // activation start
-                    let agent_id = event.src_agent;
-                    let agent = Agent::new(
-                        agent_id,
-                        agent_name(&log.agents, agent_id).and_then(|names| names.first()),
-                    );
-                    let cast = Cast::new(id, skill_name(&log.skills, id), agent, event.time);
-                    casts.entry(agent_id).or_default().push(cast);
-                }
-
-                CombatEvent {
-                    is_statechange: StateChange::None,
-                    is_activation: Activation::None,
-                    is_buff_remove: BuffRemove::None,
-                    buff: 0,
-                    ..
-                } => {
-                    // direct damage
-                    let agent_id = event.src_agent;
-                    match casts.get_mut(&agent_id).and_then(|casts| casts.last_mut()) {
-                        Some(cast) => cast.add_hit(event.result.into(), event.value, event.time),
-                        None => hits_without_cast.push(HitWithoutCast {
-                            id,
-                            agent: agent_id,
-                            time: event.time,
-                        }),
-                    }
-                }
-
-                _ => {}
-            }
+impl Agent {
+    pub fn new(id: u64, name: Option<impl Into<String>>) -> Self {
+        Self {
+            id,
+            name: name.map(Into::into),
         }
     }
 
-    let mut casts: Vec<_> = casts.into_iter().flat_map(|(_, cast)| cast).collect();
-    casts.sort_by_key(|cast| cast.time);
-
-    (casts, hits_without_cast)
+    pub fn from_log(id: u64, log: &arcdps::Log) -> Self {
+        Self::new(
+            id,
+            agent_name(&log.agents, id).and_then(|names| names.first()),
+        )
+    }
 }
 
-pub fn skill_name(skills: &[Skill], id: u32) -> Option<&str> {
+pub fn skill_name(skills: &[arcdps::Skill], id: u32) -> Option<&str> {
     skills.iter().find_map(|skill| {
         if skill.id == id {
             Some(skill.name.as_str())
