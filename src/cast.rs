@@ -1,4 +1,4 @@
-use crate::{skill_name, Agent};
+use crate::Agent;
 use arcdps_parse::{Activation, BuffRemove, CombatEvent, Log, StateChange, Strike};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -50,17 +50,17 @@ pub struct HitWithoutCast {
 #[allow(unused)]
 const QUICKNESS: u32 = 1187;
 
-pub fn extract_casts(
-    log: &Log,
-    skill_filter: u32,
-    agent_filter: Option<u64>,
+pub fn extract_casts<'a>(
+    log: &'a Log,
+    events: impl Iterator<Item = &'a CombatEvent>,
+    skill: u32,
 ) -> (Vec<Cast>, Vec<HitWithoutCast>) {
     let mut casts = HashMap::<_, Vec<_>>::new();
     let mut hits_without_cast = Vec::new();
 
-    for event in &log.events {
+    for event in events {
         let id = event.skill_id;
-        if id == skill_filter && agent_filter.map(|id| event.src_agent == id).unwrap_or(true) {
+        if id == skill {
             match event {
                 CombatEvent {
                     is_statechange: StateChange::None,
@@ -70,7 +70,7 @@ pub fn extract_casts(
                     // activation start
                     let agent_id = event.src_agent;
                     let agent = Agent::from_log(agent_id, log);
-                    let cast = Cast::new(id, skill_name(&log.skills, id), agent, event.time);
+                    let cast = Cast::new(id, log.skill_name(id), agent, event.time);
                     casts.entry(agent_id).or_default().push(cast);
                 }
 

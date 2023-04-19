@@ -22,29 +22,6 @@ impl Agent {
     }
 
     pub fn from_log(id: u64, log: &arcdps::Log) -> Self {
-        Self::new(
-            id,
-            agent_name(&log.agents, id).and_then(|names| names.first()),
-        )
+        Self::new(id, log.agent_name(id).and_then(|names| names.first()))
     }
-}
-
-pub fn skill_name(skills: &[arcdps::Skill], id: u32) -> Option<&str> {
-    skills.iter().find_map(|skill| {
-        if skill.id == id {
-            Some(skill.name.as_str())
-        } else {
-            None
-        }
-    })
-}
-
-pub fn agent_name(agents: &[arcdps::Agent], id: u64) -> Option<&[String]> {
-    agents.iter().find_map(|agent| {
-        if agent.address == id {
-            Some(agent.name.as_slice())
-        } else {
-            None
-        }
-    })
 }
