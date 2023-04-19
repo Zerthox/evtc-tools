@@ -1,9 +1,9 @@
 [package]
-name = "arcdps_hit_times"
-version = "0.1.0"
+name = "arcdps_log_tools"
+version = "0.2.0"
 edition = "2021"
 authors = ["Zerthox"]
-description = "Extract hit timestamps from ArcDPS EVTC log files."
+description = "Extract information from ArcDPS EVTC log files."
 
 [dependencies]
 arcdps_parse = { git = "https://github.com/zerthox/arcdps-bindings", features = ["serde"] }

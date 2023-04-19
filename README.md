@@ -1,2 +1,2 @@
-# ArcDPS Hit Timers
-Extract hit timestamps from ArcDPS EVTC log files.
+# ArcDPS Log Tools
+Extract information from ArcDPS EVTC log files.
