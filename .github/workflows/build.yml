@@ -1,0 +1,21 @@
+on: [workflow_dispatch]
+
+name: Cross-compile
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v3
+        with:
+            name: arcdps_log_tools_${{ matrix.os }}
+            path: |
+                target/release/arcdps_log_tools
+                target/release/arcdps_log_tools.exe
