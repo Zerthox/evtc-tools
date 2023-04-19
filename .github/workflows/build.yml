@@ -1,6 +1,6 @@
 on: [workflow_dispatch]
 
-name: Cross-compile
+name: Build
 
 jobs:
   build:
