@@ -1,7 +1,6 @@
 use crate::Agent;
-use arcdps_parse::{CombatEvent, Log, StateChange};
+use arcdps_parse::{CombatEvent, Log};
 use serde::{Deserialize, Serialize};
-use std::mem::transmute;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Position {
@@ -17,21 +16,14 @@ pub fn extract_positions<'a>(
     events: impl Iterator<Item = &'a CombatEvent>,
 ) -> Vec<Position> {
     events
-        .filter(|event| event.is_statechange == StateChange::Position)
-        .map(|event| {
-            let agent = Agent::from_log(event.src_agent, log);
-            let [x, y] = unsafe { transmute::<_, [f32; 2]>(event.dst_agent) };
-
-            #[allow(clippy::transmute_int_to_float)]
-            let z = unsafe { transmute::<_, f32>(event.value) };
-
-            Position {
+        .filter_map(|event| {
+            event.position().map(|pos| Position {
                 time: event.time,
-                agent,
-                x,
-                y,
-                z,
-            }
+                agent: Agent::from_log(event.src_agent, log),
+                x: pos.x,
+                y: pos.y,
+                z: pos.z,
+            })
         })
         .collect()
 }
