@@ -22,7 +22,7 @@ fn main() {
 
     match command {
         Command::All => {
-            let events: Vec<_> = events.collect();
+            let events: Vec<_> = events.map(|event| (event.kind(), event)).collect();
             println!("Found {} events", events.len());
             args.write_output(&events);
         }
