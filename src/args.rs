@@ -68,27 +68,28 @@ impl Args {
     }
 
     pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> {
-        let agent = self.agent.as_deref().map(|arg| {
-            log.agents
-                .iter()
-                .find(|agent| match arg.parse::<u64>() {
-                    Ok(id) => agent.address == id,
-                    Err(_) => agent.name[0] == arg,
-                })
-                .unwrap_or_else(|| panic!("Agent \"{}\" not found", arg))
+        let agent_id = self.agent.as_deref().map(|arg| {
+            let id = arg.parse::<u64>().ok();
+            let agent = log.agents.iter().find(|agent| match id {
+                Some(id) => agent.address == id,
+                None => agent.name[0] == arg,
+            });
+            match (id, agent) {
+                (_, Some(agent)) => {
+                    println!("Agent filter: \"{}\" ({})", agent.name[0], agent.address);
+                    agent.address
+                }
+                (Some(id), None) => {
+                    println!("Agent filter: unknown agent id {}", id);
+                    id
+                }
+                (None, None) => panic!("Agent \"{}\" not found", arg),
+            }
         });
 
-        println!(
-            "Agent filter: {}",
-            agent
-                .map(|agent| format!("\"{}\" ({})", agent.name[0], agent.address))
-                .unwrap_or_else(|| "all agents".into())
-        );
-
-        let agent_filter = agent.map(|agent| agent.address);
         log.events
             .iter()
-            .filter(move |event| agent_filter.map(|id| event.src_agent == id).unwrap_or(true))
+            .filter(move |event| agent_id.map(|id| event.src_agent == id).unwrap_or(true))
     }
 
     pub fn write_output<T>(&self, value: &T)
