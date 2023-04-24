@@ -1,58 +1,14 @@
 use arcdps_log_tools::{extract_casts, extract_positions};
-use arcdps_parse::{CombatEvent, Log, Parse};
 use clap::{error::ErrorKind, CommandFactory, Parser};
-use std::{
-    fs::File,
-    io::{BufReader, BufWriter},
-    path::{Path, PathBuf},
-};
-use zip::ZipArchive;
 
-/// CLI interface.
-#[derive(Debug, Clone, Parser)]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    /// Command.
-    #[command(subcommand)]
-    pub command: Command,
+mod args;
 
-    #[clap(flatten)]
-    pub args: Args,
-}
-
-/// Arguments.
-#[derive(Debug, Clone, clap::Args)]
-struct Args {
-    /// Path to input file.
-    #[clap(global = true, default_value_t)]
-    pub input: String,
-
-    /// Path to output file, defaults to input filename.
-    #[clap(global = true)]
-    pub output: Option<PathBuf>,
-
-    /// Id or name of agent to filter data for.
-    #[clap(short, long, global = true)]
-    pub agent: Option<String>,
-}
-
-#[derive(Debug, Clone, clap::Subcommand)]
-enum Command {
-    /// Extract cast & hit data.
-    Cast {
-        /// Id or name of skill to extract data for.
-        #[clap(short, long)]
-        skill: String,
-    },
-
-    /// Extract position data.
-    Position,
-}
+use self::args::*;
 
 fn main() {
-    let cli = Cli::parse();
+    let Cli { command, args } = Cli::parse();
 
-    if cli.args.input.is_empty() {
+    if args.input.is_empty() {
         Cli::command()
             .error(
                 ErrorKind::MissingRequiredArgument,
@@ -61,10 +17,16 @@ fn main() {
             .exit();
     }
 
-    let log = open_log(&cli.args.input);
-    let events = filter_log(&log, &cli.args);
+    let log = args.open_log();
+    let events = args.filter_log(&log);
 
-    match cli.command {
+    match command {
+        Command::All => {
+            let events: Vec<_> = events.collect();
+            println!("Found {} events", events.len());
+            args.write_output(&events);
+        }
+
         Command::Cast { skill: skill_arg } => {
             let skill = log
                 .skills
@@ -74,7 +36,6 @@ fn main() {
                     Err(_) => skill.name == skill_arg,
                 })
                 .unwrap_or_else(|| panic!("Skill \"{}\" not found", skill_arg));
-
             println!("Finding casts of skill \"{}\" ({})", skill.name, skill.id,);
 
             let (casts, hits_without_cast) = extract_casts(&log, events, skill.id);
@@ -95,7 +56,7 @@ fn main() {
                 hits_without_cast.len()
             );
 
-            write_output(&cli.args, &casts);
+            args.write_output(&casts);
         }
 
         Command::Position => {
@@ -107,63 +68,9 @@ fn main() {
                 println!("Initial position at {} {} {}", pos.x, pos.y, pos.z);
             }
 
-            write_output(&cli.args, &positions);
+            args.write_output(&positions);
         }
+
+        Command::BuffInfo => todo!("buff info extraction"),
     }
-}
-
-fn open_log(input: impl AsRef<Path>) -> Log {
-    let mut archive = ZipArchive::new(BufReader::new(
-        File::open(input).expect("unable to open input file"),
-    ))
-    .expect("input log file not compressed");
-    let mut file = archive.by_index(0).expect("input log file empty");
-
-    let mut log = Log::parse(&mut file).expect("failed to parse EVTC log");
-    log.events.sort_by_key(|event| event.time);
-    log
-}
-
-fn filter_log<'a>(log: &'a Log, args: &Args) -> impl Iterator<Item = &'a CombatEvent> {
-    let agent = args.agent.as_deref().map(|arg| {
-        log.agents
-            .iter()
-            .find(|agent| match arg.parse::<u64>() {
-                Ok(id) => agent.address == id,
-                Err(_) => agent.name[0] == arg,
-            })
-            .unwrap_or_else(|| panic!("Agent \"{}\" not found", arg))
-    });
-
-    println!(
-        "Agent filter: {}",
-        agent
-            .map(|agent| format!("\"{}\" ({})", agent.name[0], agent.address))
-            .unwrap_or_else(|| "all agents".into())
-    );
-
-    let agent_filter = agent.map(|agent| agent.address);
-    log.events
-        .iter()
-        .filter(move |event| agent_filter.map(|id| event.src_agent == id).unwrap_or(true))
-}
-
-fn write_output<T>(args: &Args, value: &T)
-where
-    T: ?Sized + serde::Serialize,
-{
-    let out = args
-        .output
-        .clone()
-        .unwrap_or_else(|| {
-            Path::new(&args.input)
-                .file_name()
-                .expect("input path is no file")
-                .into()
-        })
-        .with_extension("json");
-
-    let output = BufWriter::new(File::create(&out).expect("failed to create output file"));
-    serde_json::to_writer_pretty(output, value).expect("failed to serialize data");
-    println!("Saved data to \"{}\"", out.display());
 }
