@@ -43,15 +43,19 @@ pub enum Command {
     /// Extract cast & hit data.
     Cast {
         /// Id or name of skill to extract data for.
-        #[clap(short, long)]
+        #[clap(long)]
+        skill: String,
+    },
+
+    /// Extract skill/buff information.
+    Skill {
+        /// Id or name of skill to extract data for.
+        #[clap(long)]
         skill: String,
     },
 
     /// Extract position data.
     Position,
-
-    /// Extract buff information.
-    BuffInfo,
 }
 
 impl Args {

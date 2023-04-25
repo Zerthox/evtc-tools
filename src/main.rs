@@ -1,4 +1,5 @@
-use arcdps_log_tools::{extract_casts, extract_positions};
+use arcdps_log_tools::{extract_casts, extract_positions, extract_skill, SkillOrBuff};
+use arcdps_parse::{Log, Skill};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 
 mod args;
@@ -27,15 +28,8 @@ fn main() {
             args.write_output(&events);
         }
 
-        Command::Cast { skill: skill_arg } => {
-            let skill = log
-                .skills
-                .iter()
-                .find(|skill| match skill_arg.parse::<u32>() {
-                    Ok(id) => skill.id == id,
-                    Err(_) => skill.name == skill_arg,
-                })
-                .unwrap_or_else(|| panic!("Skill \"{}\" not found", skill_arg));
+        Command::Cast { skill } => {
+            let skill = find_skill(&log, &skill);
             println!("Finding casts of skill \"{}\" ({})", skill.name, skill.id,);
 
             let data = extract_casts(&log, events, skill.id);
@@ -46,6 +40,23 @@ fn main() {
             );
 
             args.write_output(&data);
+        }
+
+        Command::Skill { skill } => {
+            let skill = find_skill(&log, &skill);
+            println!("Finding data for skill \"{}\" ({})", skill.name, skill.id);
+
+            match extract_skill(&log, skill.id) {
+                Some(SkillOrBuff::Skill(skill)) => {
+                    println!("Found skill with {} timings", skill.timings.len());
+                    args.write_output(&skill);
+                }
+                Some(SkillOrBuff::Buff(buff)) => {
+                    println!("Found buff with {} formulas", buff.formulas.len());
+                    args.write_output(&buff);
+                }
+                None => println!("Found no information"),
+            }
         }
 
         Command::Position => {
@@ -59,7 +70,15 @@ fn main() {
 
             args.write_output(&positions);
         }
-
-        Command::BuffInfo => todo!("buff info extraction"),
     }
+}
+
+fn find_skill<'a>(log: &'a Log, id_or_name: &str) -> &'a Skill {
+    log.skills
+        .iter()
+        .find(|entry| match id_or_name.parse::<u32>() {
+            Ok(id) => entry.id == id,
+            Err(_) => entry.name == id_or_name,
+        })
+        .unwrap_or_else(|| panic!("Skill \"{}\" not found", id_or_name))
 }
