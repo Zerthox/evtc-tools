@@ -51,7 +51,7 @@ pub enum Command {
     Skill {
         /// Id or name of skill to extract data for.
         #[clap(long)]
-        skill: String,
+        skill: Option<String>,
     },
 
     /// Extract position data.

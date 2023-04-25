@@ -2,74 +2,55 @@ use arcdps_parse::{BuffFormula, BuffInfo, Log, SkillInfo, SkillTiming};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum SkillOrBuff {
-    Skill(Skill),
-    Buff(Buff),
-}
-
-impl From<Skill> for SkillOrBuff {
-    fn from(skill: Skill) -> Self {
-        Self::Skill(skill)
-    }
-}
-
-impl From<Buff> for SkillOrBuff {
-    fn from(buff: Buff) -> Self {
-        Self::Buff(buff)
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Skill {
     pub id: u32,
-    pub name: Option<String>,
-    pub info: SkillInfo,
-    pub timings: Vec<SkillTiming>,
+    pub name: String,
+    pub kind: Option<SkillKind>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Buff {
-    pub id: u32,
-    pub name: Option<String>,
-    pub info: BuffInfo,
-    pub formulas: Vec<BuffFormula>,
+pub enum SkillKind {
+    Skill {
+        info: SkillInfo,
+        timings: Vec<SkillTiming>,
+    },
+    Buff {
+        info: BuffInfo,
+        formulas: Vec<BuffFormula>,
+    },
 }
 
-pub fn extract_skill(log: &Log, id: u32) -> Option<SkillOrBuff> {
-    let name = log.skill_name(id).map(Into::into);
-    let iter = log.events.iter().filter(|event| event.skill_id == id);
+pub fn extract_skills(log: &Log, id: Option<u32>) -> Vec<Skill> {
+    log.skills
+        .iter()
+        .filter(|skill| match id {
+            Some(id) => skill.id == id,
+            None => true,
+        })
+        .map(|skill| {
+            let id = skill.id;
+            let name = skill.name.clone();
+            let iter = log.events.iter().filter(|event| event.skill_id == skill.id);
 
-    if let Some(info) = iter.clone().find_map(|event| event.skill_info()) {
-        let timings = iter
-            .clone()
-            .filter_map(|event| event.skill_timing())
-            .collect();
+            let kind = if let Some(info) = iter.clone().find_map(|event| event.skill_info()) {
+                let timings = iter
+                    .clone()
+                    .filter_map(|event| event.skill_timing())
+                    .collect();
 
-        Some(
-            Skill {
-                id,
-                name,
-                info,
-                timings,
-            }
-            .into(),
-        )
-    } else if let Some(info) = iter.clone().find_map(|event| event.buff_info()) {
-        let formulas = iter
-            .clone()
-            .filter_map(|event| event.buff_formula())
-            .collect();
+                Some(SkillKind::Skill { info, timings })
+            } else if let Some(info) = iter.clone().find_map(|event| event.buff_info()) {
+                let formulas = iter
+                    .clone()
+                    .filter_map(|event| event.buff_formula())
+                    .collect();
 
-        Some(
-            Buff {
-                id,
-                name,
-                info,
-                formulas,
-            }
-            .into(),
-        )
-    } else {
-        None
-    }
+                Some(SkillKind::Buff { info, formulas })
+            } else {
+                None
+            };
+
+            Skill { id, name, kind }
+        })
+        .collect()
 }
