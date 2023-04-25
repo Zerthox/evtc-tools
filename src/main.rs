@@ -38,25 +38,14 @@ fn main() {
                 .unwrap_or_else(|| panic!("Skill \"{}\" not found", skill_arg));
             println!("Finding casts of skill \"{}\" ({})", skill.name, skill.id,);
 
-            let (casts, hits_without_cast) = extract_casts(&log, events, skill.id);
-
-            for info in &hits_without_cast {
-                eprintln!(
-                    "Hit from \"{}\" ({}) at time {} without prior cast",
-                    log.agent_name(info.agent)
-                        .and_then(|names| names.first().map(|name| name.as_str()))
-                        .unwrap_or_default(),
-                    info.agent,
-                    info.time
-                );
-            }
+            let data = extract_casts(&log, events, skill.id);
             println!(
                 "Found {} casts and {} hits without cast",
-                casts.len(),
-                hits_without_cast.len()
+                data.casts.len(),
+                data.hits_without_cast.len()
             );
 
-            args.write_output(&casts);
+            args.write_output(&data);
         }
 
         Command::Position => {
