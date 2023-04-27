@@ -22,9 +22,9 @@ dependencies = [
 
 [[package]]
 name = "anstream"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e579a7752471abc2a8268df8b20005e3eadd975f585398f17efcfd8d4927371"
+checksum = "6342bd4f5a1205d7f41e94a41a901f5647c938cdfa96036338e8533c9d6c2450"
 dependencies = [
  "anstyle",
  "anstyle-parse",
@@ -61,9 +61,9 @@ dependencies = [
 
 [[package]]
 name = "anstyle-wincon"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bcd8291a340dd8ac70e18878bc4501dd7b4ff970cfa21c207d36ece51ea88fd"
+checksum = "180abfa45703aebe0093f79badacc01b8fd4ea2e35118747e5811127f926e188"
 dependencies = [
  "anstyle",
  "windows-sys",
@@ -71,8 +71,8 @@ dependencies = [
 
 [[package]]
 name = "arcdps_evtc"
-version = "0.4.0"
-source = "git+https://github.com/zerthox/arcdps-bindings#7e3c6041eaaf01252352bfc7b8cf29e9faa39ddf"
+version = "0.4.2"
+source = "git+https://github.com/zerthox/arcdps-bindings#c790a29b4fb066da3d7f2f42916567939feea0e3"
 dependencies = [
  "num_enum",
  "serde",
@@ -80,7 +80,7 @@ dependencies = [
 
 [[package]]
 name = "arcdps_log_tools"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "arcdps_parse",
  "clap",
@@ -92,7 +92,7 @@ dependencies = [
 [[package]]
 name = "arcdps_parse"
 version = "0.3.1"
-source = "git+https://github.com/zerthox/arcdps-bindings#7e3c6041eaaf01252352bfc7b8cf29e9faa39ddf"
+source = "git+https://github.com/zerthox/arcdps-bindings#c790a29b4fb066da3d7f2f42916567939feea0e3"
 dependencies = [
  "arcdps_evtc",
  "byteorder",
@@ -521,9 +521,9 @@ checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 
 [[package]]
 name = "rustix"
-version = "0.37.14"
+version = "0.37.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9b864d3c18a5785a05953adeed93e2dca37ed30f18e69bba9f30079d51f363f"
+checksum = "a0661814f891c57c930a610266415528da53c4933e6dea5fb350cbfe048a9ece"
 dependencies = [
  "bitflags",
  "errno",
