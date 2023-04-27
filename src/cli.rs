@@ -1,4 +1,4 @@
-use arcdps_parse::{CombatEvent, Log, Parse};
+use arcdps_parse::{Agent, CombatEvent, Log, Parse};
 use clap::Parser;
 use std::{
     fs::File,
@@ -75,35 +75,38 @@ impl Args {
         log
     }
 
-    fn find_agent(log: &Log, agent: &Option<String>, kind: &str) -> Option<u64> {
-        agent.as_deref().map(|arg| {
-            let id = arg.parse::<u64>().ok();
-            let agent = log.agents.iter().find(|agent| match id {
-                Some(id) => agent.address == id,
-                None => agent.name[0] == arg,
-            });
-            match (id, agent) {
-                (_, Some(agent)) => {
-                    println!("{} filter: \"{}\" ({})", kind, agent.name[0], agent.address);
-                    agent.address
+    fn create_filter(log: &Log, arg: &Option<String>, kind: &str) -> Filter {
+        arg.as_deref()
+            .map(|arg| {
+                let filter = Filter::parse(log, arg);
+                let agent = filter.agent(log);
+                match (&filter, agent) {
+                    (_, Some(agent)) => {
+                        println!(
+                            "Agent {} filter: \"{}\" ({})",
+                            kind, agent.name[0], agent.address
+                        )
+                    }
+                    (Filter::ArcId(id), None) => {
+                        println!("Agent {} filter: unknown agent id {}", kind, id)
+                    }
+                    (Filter::InstId(id), None) => {
+                        println!("Agent {} filter: unknown agent instance id {}", kind, id)
+                    }
+                    _ => {}
                 }
-                (Some(id), None) => {
-                    println!("{} filter: unknown agent id {}", kind, id);
-                    id
-                }
-                (None, None) => panic!("Agent \"{}\" not found", arg),
-            }
-        })
+                filter
+            })
+            .unwrap_or_default()
     }
 
     pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> {
-        let src = Self::find_agent(log, &self.agent, "Source");
-        let dst = Self::find_agent(log, &self.target, "Dest");
+        let src = Self::create_filter(log, &self.agent, "source");
+        let dst = Self::create_filter(log, &self.target, "dest");
 
-        log.events.iter().filter(move |event| {
-            src.map(|id| event.src_agent == id).unwrap_or(true)
-                && dst.map(|id| event.dst_agent == id).unwrap_or(true)
-        })
+        log.events
+            .iter()
+            .filter(move |event| src.filter(event) && dst.filter(event))
     }
 
     pub fn write_output<T>(&self, value: &T)
@@ -124,5 +127,52 @@ impl Args {
         let output = BufWriter::new(File::create(&out).expect("failed to create output file"));
         serde_json::to_writer_pretty(output, value).expect("failed to serialize data");
         println!("Saved data to \"{}\"", out.display());
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+enum Filter {
+    #[default]
+    None,
+    ArcId(u64),
+    InstId(u16),
+}
+
+impl Filter {
+    fn parse(log: &Log, value: &str) -> Self {
+        if let Some(string) = value.strip_prefix("inst:") {
+            let id = string.parse().expect("invalid instance id");
+            Self::InstId(id)
+        } else {
+            match value.parse::<u64>() {
+                Ok(id) => Self::ArcId(id),
+                Err(_) => log
+                    .agents
+                    .iter()
+                    .find(|agent| agent.name[0] == value)
+                    .map(|agent| Self::ArcId(agent.address))
+                    .unwrap_or_else(|| panic!("failed to find agent \"{}\"", value)),
+            }
+        }
+    }
+
+    fn agent<'a>(&self, log: &'a Log) -> Option<&'a Agent> {
+        match *self {
+            Self::None => None,
+            Self::ArcId(id) => log.agent(id),
+            Self::InstId(id) => log
+                .events
+                .iter()
+                .find(|event| event.src_instance_id == id)
+                .and_then(|event| log.agent(event.src_agent)),
+        }
+    }
+
+    fn filter(&self, event: &CombatEvent) -> bool {
+        match *self {
+            Self::None => true,
+            Self::ArcId(id) => event.src_agent == id,
+            Self::InstId(id) => event.src_instance_id == id,
+        }
     }
 }

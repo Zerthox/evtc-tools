@@ -2,9 +2,9 @@ use arcdps_log_tools::{extract_casts, extract_positions, extract_skills};
 use arcdps_parse::{Log, Skill};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 
-mod args;
+mod cli;
 
-use self::args::*;
+use self::cli::*;
 
 fn main() {
     let Cli { command, args } = Cli::parse();
