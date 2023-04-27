@@ -30,9 +30,13 @@ pub struct Args {
     #[clap(global = true)]
     pub output: Option<PathBuf>,
 
-    /// Id or name of agent to filter data for.
+    /// Id or name of source agent to filter data for.
     #[clap(short, long, global = true)]
     pub agent: Option<String>,
+
+    /// Id or name of destination agent to filter data for.
+    #[clap(short, long, global = true)]
+    pub target: Option<String>,
 }
 
 #[derive(Debug, Clone, clap::Subcommand)]
@@ -71,8 +75,8 @@ impl Args {
         log
     }
 
-    pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> {
-        let agent_id = self.agent.as_deref().map(|arg| {
+    fn find_agent(log: &Log, agent: &Option<String>, kind: &str) -> Option<u64> {
+        agent.as_deref().map(|arg| {
             let id = arg.parse::<u64>().ok();
             let agent = log.agents.iter().find(|agent| match id {
                 Some(id) => agent.address == id,
@@ -80,20 +84,26 @@ impl Args {
             });
             match (id, agent) {
                 (_, Some(agent)) => {
-                    println!("Agent filter: \"{}\" ({})", agent.name[0], agent.address);
+                    println!("{} filter: \"{}\" ({})", kind, agent.name[0], agent.address);
                     agent.address
                 }
                 (Some(id), None) => {
-                    println!("Agent filter: unknown agent id {}", id);
+                    println!("{} filter: unknown agent id {}", kind, id);
                     id
                 }
                 (None, None) => panic!("Agent \"{}\" not found", arg),
             }
-        });
+        })
+    }
 
-        log.events
-            .iter()
-            .filter(move |event| agent_id.map(|id| event.src_agent == id).unwrap_or(true))
+    pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> {
+        let src = Self::find_agent(log, &self.agent, "Source");
+        let dst = Self::find_agent(log, &self.target, "Dest");
+
+        log.events.iter().filter(move |event| {
+            src.map(|id| event.src_agent == id).unwrap_or(true)
+                && dst.map(|id| event.dst_agent == id).unwrap_or(true)
+        })
     }
 
     pub fn write_output<T>(&self, value: &T)

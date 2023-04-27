@@ -28,3 +28,11 @@ impl Agent {
         Self::new(id, log.agent_name(id).and_then(|names| names.first()))
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum BreakbarState {
+    Active = 0,
+    Recover = 1,
+    Immune = 2,
+    None = 3,
+}
