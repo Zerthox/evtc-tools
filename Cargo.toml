@@ -1,6 +1,6 @@
 [package]
 name = "arcdps_log_tools"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["Zerthox"]
 description = "Extract information from ArcDPS EVTC log files."
