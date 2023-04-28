@@ -121,6 +121,7 @@ impl Args {
     }
 }
 
+// TODO: filter all by name not just first id
 #[derive(Debug, Default, Clone)]
 enum Filter {
     #[default]

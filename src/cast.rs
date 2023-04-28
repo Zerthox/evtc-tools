@@ -92,13 +92,13 @@ pub fn extract_casts<'a>(
     events: impl Iterator<Item = &'a CombatEvent>,
     skill: Option<u32>,
 ) -> Casts {
-    let mut casts = HashMap::<_, Vec<_>>::new();
+    let mut casts = HashMap::<_, HashMap<_, Vec<_>>>::new();
     let mut hits_without_cast = Vec::new();
 
     for event in events {
-        let id = event.skill_id;
-        if skill.map(|skill| id == skill).unwrap_or(true) {
-            let skill = Skill::from_log(log, id);
+        let skill_id = event.skill_id;
+        if skill.map(|skill| skill_id == skill).unwrap_or(true) {
+            let skill = Skill::from_log(log, skill_id);
 
             match *event {
                 // activation start
@@ -111,7 +111,12 @@ pub fn extract_casts<'a>(
                 } => {
                     let agent = Agent::from_log(src_agent, log);
                     let cast = Cast::new(skill, agent, time);
-                    casts.entry(src_agent).or_default().push(cast);
+                    casts
+                        .entry(src_agent)
+                        .or_default()
+                        .entry(skill_id)
+                        .or_default()
+                        .push(cast);
                 }
 
                 // direct damage
@@ -129,7 +134,11 @@ pub fn extract_casts<'a>(
                 } => {
                     let kind = kind.into();
                     let target = Agent::from_log(dst_agent, log);
-                    match casts.get_mut(&src_agent).and_then(|casts| casts.last_mut()) {
+                    match casts
+                        .get_mut(&src_agent)
+                        .and_then(|map| map.get_mut(&skill.id))
+                        .and_then(|casts| casts.last_mut())
+                    {
                         Some(cast) => cast.add_hit(Hit {
                             time,
                             target,
@@ -152,7 +161,11 @@ pub fn extract_casts<'a>(
         }
     }
 
-    let mut casts: Vec<_> = casts.into_iter().flat_map(|(_, cast)| cast).collect();
+    let mut casts: Vec<_> = casts
+        .into_iter()
+        .flat_map(|(_, cast)| cast)
+        .flat_map(|(_, cast)| cast)
+        .collect();
     casts.sort_by_key(|cast| cast.time);
 
     Casts {
