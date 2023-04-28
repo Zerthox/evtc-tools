@@ -1,11 +1,10 @@
-use arcdps_parse::{Agent, CombatEvent, Log, Parse};
+use arcdps_parse::{parse_file, Agent, CombatEvent, Log};
 use clap::Parser;
 use std::{
     fs::File,
-    io::{BufReader, BufWriter},
+    io::BufWriter,
     path::{Path, PathBuf},
 };
-use zip::ZipArchive;
 
 /// CLI interface.
 #[derive(Debug, Clone, Parser)]
@@ -64,15 +63,7 @@ pub enum Command {
 
 impl Args {
     pub fn open_log(&self) -> Log {
-        let mut archive = ZipArchive::new(BufReader::new(
-            File::open(&self.input).expect("unable to open input file"),
-        ))
-        .expect("input log file not compressed");
-        let mut file = archive.by_index(0).expect("input log file empty");
-
-        let mut log = Log::parse(&mut file).expect("failed to parse EVTC log");
-        log.events.sort_by_key(|event| event.time);
-        log
+        parse_file(&self.input).expect("failed to parse EVTC log")
     }
 
     fn create_filter(log: &Log, arg: &Option<String>, kind: &str) -> Filter {
