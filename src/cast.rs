@@ -12,17 +12,15 @@ pub struct Casts {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cast {
     pub time: u64,
-    pub id: u32,
-    pub name: Option<String>,
+    pub skill: Skill,
     pub agent: Agent,
     pub hits: Vec<HitWithCast>,
 }
 
 impl Cast {
-    pub fn new(id: u32, name: Option<impl Into<String>>, agent: Agent, time: u64) -> Self {
+    pub fn new(skill: Skill, agent: Agent, time: u64) -> Self {
         Self {
-            id,
-            name: name.map(Into::into),
+            skill,
             agent,
             time,
             hits: Vec::new(),
@@ -67,16 +65,27 @@ pub struct HitWithCast {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HitWithoutCast {
     pub time: u64,
-    pub id: u32,
+    pub skill: Skill,
     pub agent: Agent,
     pub target: Agent,
     pub kind: Strike,
     pub damage: i32,
 }
 
-// TODO: include quickness gained/lost
-#[allow(unused)]
-const QUICKNESS: u32 = 1187;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Skill {
+    pub id: u32,
+    pub name: Option<String>,
+}
+
+impl Skill {
+    pub fn from_log(log: &Log, id: u32) -> Self {
+        Self {
+            id,
+            name: log.skill_name(id).map(Into::into),
+        }
+    }
+}
 
 pub fn extract_casts<'a>(
     log: &'a Log,
@@ -89,6 +98,8 @@ pub fn extract_casts<'a>(
     for event in events {
         let id = event.skill_id;
         if skill.map(|skill| id == skill).unwrap_or(true) {
+            let skill = Skill::from_log(log, id);
+
             match *event {
                 // activation start
                 CombatEvent {
@@ -99,7 +110,7 @@ pub fn extract_casts<'a>(
                     ..
                 } => {
                     let agent = Agent::from_log(src_agent, log);
-                    let cast = Cast::new(id, log.skill_name(id), agent, time);
+                    let cast = Cast::new(skill, agent, time);
                     casts.entry(src_agent).or_default().push(cast);
                 }
 
@@ -127,7 +138,7 @@ pub fn extract_casts<'a>(
                         }),
                         None => hits_without_cast.push(HitWithoutCast {
                             time,
-                            id,
+                            skill,
                             agent: Agent::from_log(src_agent, log),
                             target,
                             kind,
