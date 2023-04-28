@@ -29,10 +29,13 @@ fn main() {
         }
 
         Command::Cast { skill } => {
-            let skill = find_skill(&log, &skill);
-            println!("Finding casts of skill \"{}\" ({})", skill.name, skill.id,);
+            let skill = skill.map(|arg| find_skill(&log, &arg));
+            match skill {
+                Some(skill) => println!("Finding casts of skill \"{}\" ({})", skill.name, skill.id),
+                None => println!("Finding all skill casts"),
+            }
 
-            let data = extract_casts(&log, events, skill.id);
+            let data = extract_casts(&log, events, skill.map(|skill| skill.id));
             println!(
                 "Found {} casts and {} hits without cast",
                 data.casts.len(),

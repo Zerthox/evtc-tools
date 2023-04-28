@@ -81,14 +81,14 @@ const QUICKNESS: u32 = 1187;
 pub fn extract_casts<'a>(
     log: &'a Log,
     events: impl Iterator<Item = &'a CombatEvent>,
-    skill: u32,
+    skill: Option<u32>,
 ) -> Casts {
     let mut casts = HashMap::<_, Vec<_>>::new();
     let mut hits_without_cast = Vec::new();
 
     for event in events {
         let id = event.skill_id;
-        if id == skill {
+        if skill.map(|skill| id == skill).unwrap_or(true) {
             match *event {
                 // activation start
                 CombatEvent {

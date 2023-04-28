@@ -47,7 +47,7 @@ pub enum Command {
     Cast {
         /// Id or name of skill to extract data for.
         #[clap(long)]
-        skill: String,
+        skill: Option<String>,
     },
 
     /// Extract skill/buff information.
