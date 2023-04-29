@@ -5,16 +5,21 @@ use serde::{Deserialize, Serialize};
 pub struct Skill {
     pub id: u32,
     pub name: String,
+
+    #[serde(flatten)]
     pub kind: Option<SkillKind>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum SkillKind {
     Skill {
+        #[serde(flatten)]
         info: SkillInfo,
         timings: Vec<SkillTiming>,
     },
     Buff {
+        #[serde(flatten)]
         info: BuffInfo,
         formulas: Vec<BuffFormula>,
     },
