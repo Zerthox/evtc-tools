@@ -6,21 +6,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// CLI interface.
+/// CLI arguments.
 #[derive(Debug, Clone, Parser)]
 #[command(author, version, about, long_about = None)]
-pub struct Cli {
+pub struct Args {
     /// Command.
     #[command(subcommand)]
     pub command: Command,
 
-    #[clap(flatten)]
-    pub args: Args,
-}
-
-/// Arguments.
-#[derive(Debug, Clone, clap::Args)]
-pub struct Args {
     /// Path to input file.
     #[clap(global = true, default_value_t)]
     pub input: String,
@@ -36,32 +29,6 @@ pub struct Args {
     /// Id or name of destination agent to filter data for.
     #[clap(short, long, global = true)]
     pub target: Option<String>,
-}
-
-#[derive(Debug, Clone, clap::Subcommand)]
-pub enum Command {
-    /// Extract all events.
-    All,
-
-    /// Extract cast & hit data.
-    Cast {
-        /// Id or name of skill to extract data for.
-        #[clap(long)]
-        skill: Option<String>,
-    },
-
-    /// Extract skill/buff information.
-    Skill {
-        /// Id or name of skill to extract data for.
-        #[clap(long)]
-        skill: Option<String>,
-    },
-
-    /// Extract position data.
-    Position,
-
-    ///Extract effect data.
-    Effect,
 }
 
 impl Args {
@@ -94,7 +61,7 @@ impl Args {
             .unwrap_or_default()
     }
 
-    pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> {
+    pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> + Clone {
         let src = Self::create_filter(log, &self.agent, "source");
         let dst = Self::create_filter(log, &self.target, "dest");
 
@@ -107,16 +74,23 @@ impl Args {
     where
         T: ?Sized + serde::Serialize,
     {
-        let out = self
-            .output
-            .clone()
-            .unwrap_or_else(|| {
-                Path::new(&self.input)
-                    .file_name()
+        let out = self.output.clone().unwrap_or_else(|| {
+            let mut path: PathBuf = Path::new(&self.input)
+                .file_name()
+                .expect("input path is no file")
+                .into();
+
+            if let Some(suffix) = self.command.suffix() {
+                let mut name = path
+                    .file_stem()
                     .expect("input path is no file")
-                    .into()
-            })
-            .with_extension("json");
+                    .to_os_string();
+                name.push(format!("_{suffix}"));
+                path = path.with_file_name(name);
+            }
+
+            path.with_extension("json")
+        });
 
         let output = BufWriter::new(File::create(&out).expect("failed to create output file"));
         serde_json::to_writer_pretty(output, value).expect("failed to serialize data");
@@ -168,6 +142,45 @@ impl Filter {
             Self::None => true,
             Self::ArcId(id) => event.src_agent == id,
             Self::InstId(id) => event.src_instance_id == id,
+        }
+    }
+}
+
+/// CLI command.
+#[derive(Debug, Clone, clap::Subcommand)]
+pub enum Command {
+    /// Extract all events.
+    All,
+
+    /// Extract cast & hit data.
+    Cast {
+        /// Id or name of skill to extract data for.
+        #[clap(long)]
+        skill: Option<String>,
+    },
+
+    /// Extract skill/buff information.
+    Skill {
+        /// Id or name of skill to extract data for.
+        #[clap(long)]
+        skill: Option<String>,
+    },
+
+    /// Extract position data.
+    Position,
+
+    ///Extract effect data.
+    Effect,
+}
+
+impl Command {
+    pub fn suffix(&self) -> Option<&'static str> {
+        match self {
+            Command::Cast { .. } => Some("casts"),
+            Command::Skill { .. } => Some("skills"),
+            Command::Position => Some("positions"),
+            Command::Effect => Some("effects"),
+            _ => None,
         }
     }
 }

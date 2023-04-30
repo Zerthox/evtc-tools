@@ -71,8 +71,8 @@ dependencies = [
 
 [[package]]
 name = "arcdps_evtc"
-version = "0.4.3"
-source = "git+https://github.com/zerthox/arcdps-bindings#b6206c187640f3ea61fd5adfab1f748b5a4476b3"
+version = "0.4.4"
+source = "git+https://github.com/zerthox/arcdps-bindings#9eb7e44c47cb3831f8c0609f752ff47fb16ac64c"
 dependencies = [
  "num_enum",
  "serde",
@@ -80,7 +80,7 @@ dependencies = [
 
 [[package]]
 name = "arcdps_log_tools"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "arcdps_parse",
  "clap",
@@ -91,7 +91,7 @@ dependencies = [
 [[package]]
 name = "arcdps_parse"
 version = "0.4.0"
-source = "git+https://github.com/zerthox/arcdps-bindings#b6206c187640f3ea61fd5adfab1f748b5a4476b3"
+source = "git+https://github.com/zerthox/arcdps-bindings#9eb7e44c47cb3831f8c0609f752ff47fb16ac64c"
 dependencies = [
  "arcdps_evtc",
  "byteorder",
@@ -521,9 +521,9 @@ checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 
 [[package]]
 name = "rustix"
-version = "0.37.17"
+version = "0.37.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc809f704c03a812ac71f22456c857be34185cac691a4316f27ab0f633bb9009"
+checksum = "8bbfc1d1c7c40c01715f47d71444744a81669ca84e8b63e25a55e169b1f86433"
 dependencies = [
  "bitflags",
  "errno",

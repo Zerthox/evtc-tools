@@ -1,4 +1,4 @@
-use arcdps_log_tools::{extract_casts, extract_positions, extract_skills};
+use arcdps_log_tools::{extract_casts, extract_effects, extract_positions, extract_skills};
 use arcdps_parse::{Log, Skill};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 
@@ -7,10 +7,10 @@ mod cli;
 use self::cli::*;
 
 fn main() {
-    let Cli { command, args } = Cli::parse();
+    let args = Args::parse();
 
     if args.input.is_empty() {
-        Cli::command()
+        Args::command()
             .error(
                 ErrorKind::MissingRequiredArgument,
                 "input file was not provided",
@@ -21,7 +21,7 @@ fn main() {
     let log = args.open_log();
     let events = args.filter_log(&log);
 
-    match command {
+    match &args.command {
         Command::All => {
             let events: Vec<_> = events.map(|event| (event.kind(), event)).collect();
             println!("Found {} events", events.len());
@@ -29,7 +29,7 @@ fn main() {
         }
 
         Command::Cast { skill } => {
-            let skill = skill.map(|arg| find_skill(&log, &arg));
+            let skill = skill.as_ref().map(|arg| find_skill(&log, arg));
             match skill {
                 Some(skill) => println!("Finding casts of skill \"{}\" ({})", skill.name, skill.id),
                 None => println!("Finding all skill casts"),
@@ -46,7 +46,7 @@ fn main() {
         }
 
         Command::Skill { skill } => {
-            let skill = skill.map(|arg| find_skill(&log, &arg));
+            let skill = skill.as_ref().map(|arg| find_skill(&log, arg));
             match skill {
                 Some(skill) => println!("Finding skill data for \"{}\" ({})", skill.name, skill.id),
                 None => println!("Finding all skill data"),
