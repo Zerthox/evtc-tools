@@ -59,6 +59,9 @@ pub enum Command {
 
     /// Extract position data.
     Position,
+
+    ///Extract effect data.
+    Effect,
 }
 
 impl Args {

@@ -69,6 +69,15 @@ fn main() {
 
             args.write_output(&positions);
         }
+
+        Command::Effect => {
+            println!("Finding effects");
+
+            let effects = extract_effects(&log, events);
+            println!("Found {} effects", effects.len());
+
+            args.write_output(&effects);
+        }
     }
 }
 
