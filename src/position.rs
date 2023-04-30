@@ -1,4 +1,4 @@
-use crate::Agent;
+use crate::{log_start, Agent};
 use arcdps_parse::{CombatEvent, Log, StateChange};
 use serde::{Deserialize, Serialize};
 
@@ -15,12 +15,13 @@ pub fn extract_positions<'a>(
     log: &'a Log,
     events: impl Iterator<Item = &'a CombatEvent>,
 ) -> Vec<Position> {
+    let start = log_start(log);
     events
         .filter(|event| event.is_statechange == StateChange::Position)
         .map(|event| {
             let pos = event.position().unwrap();
             Position {
-                time: event.time,
+                time: event.time - start,
                 agent: Agent::from_log(event.src_agent, log),
                 x: pos.x,
                 y: pos.y,

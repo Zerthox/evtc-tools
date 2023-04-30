@@ -1,4 +1,4 @@
-use crate::{util::to_tick_rounded, Agent};
+use crate::{log_start, util::to_tick_rounded, Agent};
 use arcdps_parse::{Activation, BuffRemove, CombatEvent, Log, StateChange, Strike};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -92,6 +92,7 @@ pub fn extract_casts<'a>(
     events: impl Iterator<Item = &'a CombatEvent>,
     skill: Option<u32>,
 ) -> Casts {
+    let start = log_start(log);
     let mut casts = HashMap::<_, Vec<_>>::new();
     let mut hits_without_cast = Vec::new();
 
@@ -99,13 +100,14 @@ pub fn extract_casts<'a>(
         let skill_id = event.skill_id;
         if skill.map(|skill| skill_id == skill).unwrap_or(true) {
             let skill = Skill::from_log(log, skill_id);
+            let time = event.time - start;
 
             match *event {
                 // activation start
                 CombatEvent {
                     is_statechange: StateChange::None,
                     is_activation: Activation::Start,
-                    time,
+
                     src_agent,
                     ..
                 } => {
@@ -120,7 +122,6 @@ pub fn extract_casts<'a>(
                     is_activation: Activation::None,
                     is_buff_remove: BuffRemove::None,
                     buff: 0,
-                    time,
                     src_agent,
                     dst_agent,
                     result: kind,
