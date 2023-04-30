@@ -49,7 +49,7 @@ pub fn extract_effects<'a>(
             (
                 event.skill_id,
                 EffectInfo::new(
-                    unsafe { transmute([event.src_agent, event.dst_agent]) },
+                    u128::from_be_bytes(unsafe { transmute([event.src_agent, event.dst_agent]) }),
                     event.overstack_value.try_into().ok(),
                 ),
             )
