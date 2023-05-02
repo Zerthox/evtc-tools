@@ -61,6 +61,13 @@ impl Args {
             .unwrap_or_default()
     }
 
+    pub fn agent_filter<'a>(&self, log: &'a Log) -> Option<&'a Agent> {
+        self.agent.as_ref().and_then(|arg| {
+            let filter = Filter::parse(log, arg);
+            filter.agent(log)
+        })
+    }
+
     pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> + Clone {
         let src = Self::create_filter(log, &self.agent, "source");
         let dst = Self::create_filter(log, &self.target, "dest");
@@ -171,6 +178,9 @@ pub enum Command {
 
     ///Extract effect data.
     Effect,
+
+    /// Map direct damage hits to weapon sets.
+    Hitmap,
 }
 
 impl Command {
@@ -180,6 +190,7 @@ impl Command {
             Command::Skill { .. } => Some("skills"),
             Command::Position => Some("positions"),
             Command::Effect => Some("effects"),
+            Command::Hitmap => Some("hitmap"),
             _ => None,
         }
     }

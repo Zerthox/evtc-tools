@@ -4,7 +4,22 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Skill {
     pub id: u32,
-    pub name: String,
+    pub name: Option<String>,
+}
+
+impl Skill {
+    pub fn from_log(log: &Log, id: u32) -> Self {
+        Self {
+            id,
+            name: log.skill_name(id).map(Into::into),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SkillWithInfo {
+    #[serde(flatten)]
+    pub skill: Skill,
 
     #[serde(flatten)]
     pub kind: Option<SkillKind>,
@@ -25,7 +40,7 @@ pub enum SkillKind {
     },
 }
 
-pub fn extract_skills(log: &Log, id: Option<u32>) -> Vec<Skill> {
+pub fn extract_skills(log: &Log, id: Option<u32>) -> Vec<SkillWithInfo> {
     log.skills
         .iter()
         .filter(|skill| match id {
@@ -55,7 +70,13 @@ pub fn extract_skills(log: &Log, id: Option<u32>) -> Vec<Skill> {
                 None
             };
 
-            Skill { id, name, kind }
+            SkillWithInfo {
+                skill: Skill {
+                    id,
+                    name: Some(name),
+                },
+                kind,
+            }
         })
         .collect()
 }

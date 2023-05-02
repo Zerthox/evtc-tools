@@ -1,12 +1,12 @@
-use crate::{log_start, util::to_tick_rounded, Agent};
-use arcdps_parse::{Activation, BuffRemove, CombatEvent, Log, StateChange, Strike};
+use crate::{log_start, util::to_tick_rounded, Agent, Hit, Skill};
+use arcdps_parse::{Activation, BuffRemove, CombatEvent, Log, StateChange};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Casts {
     pub casts: Vec<Cast>,
-    pub hits_without_cast: Vec<HitWithoutCast>,
+    pub hits_without_cast: Vec<StandaloneHit>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct Cast {
     pub time: u64,
     pub skill: Skill,
     pub agent: Agent,
-    pub hits: Vec<HitWithCast>,
+    pub hits: Vec<CastHit>,
 }
 
 impl Cast {
@@ -27,64 +27,30 @@ impl Cast {
         }
     }
 
-    pub fn add_hit(&mut self, hit: Hit) {
-        let Hit {
-            time,
-            kind,
-            damage,
-            target,
-        } = hit;
-        let time = time.saturating_sub(self.time);
-        self.hits.push(HitWithCast {
-            time,
-            tick: to_tick_rounded(time),
-            kind,
-            damage,
-            target,
+    pub fn add_hit(&mut self, mut hit: Hit) {
+        hit.time -= self.time;
+        self.hits.push(CastHit {
+            tick: to_tick_rounded(hit.time),
+            hit,
         });
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Hit {
-    pub time: u64,
-    pub target: Agent,
-    pub kind: Strike,
-    pub damage: i32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HitWithCast {
-    pub time: u64,
+pub struct CastHit {
     pub tick: u64,
-    pub target: Agent,
-    pub kind: Strike,
-    pub damage: i32,
+
+    #[serde(flatten)]
+    pub hit: Hit,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HitWithoutCast {
-    pub time: u64,
+pub struct StandaloneHit {
     pub skill: Skill,
     pub agent: Agent,
-    pub target: Agent,
-    pub kind: Strike,
-    pub damage: i32,
-}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Skill {
-    pub id: u32,
-    pub name: Option<String>,
-}
-
-impl Skill {
-    pub fn from_log(log: &Log, id: u32) -> Self {
-        Self {
-            id,
-            name: log.skill_name(id).map(Into::into),
-        }
-    }
+    #[serde(flatten)]
+    pub hit: Hit,
 }
 
 pub fn extract_casts<'a>(
@@ -123,30 +89,19 @@ pub fn extract_casts<'a>(
                     is_buff_remove: BuffRemove::None,
                     buff: 0,
                     src_agent,
-                    dst_agent,
-                    result: kind,
-                    value: damage,
                     ..
                 } => {
-                    let kind = kind.into();
-                    let target = Agent::from_log(dst_agent, log);
+                    let hit = Hit::try_from_event(log, event).unwrap();
+
                     match casts
                         .get_mut(&(src_agent, skill_id))
                         .and_then(|casts| casts.last_mut())
                     {
-                        Some(cast) => cast.add_hit(Hit {
-                            time,
-                            target,
-                            kind,
-                            damage,
-                        }),
-                        None => hits_without_cast.push(HitWithoutCast {
-                            time,
+                        Some(cast) => cast.add_hit(hit),
+                        None => hits_without_cast.push(StandaloneHit {
+                            hit,
                             skill,
                             agent: Agent::from_log(src_agent, log),
-                            target,
-                            kind,
-                            damage,
                         }),
                     }
                 }

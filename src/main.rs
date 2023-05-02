@@ -1,4 +1,6 @@
-use arcdps_log_tools::{extract_casts, extract_effects, extract_positions, extract_skills};
+use arcdps_log_tools::{
+    extract_casts, extract_effects, extract_positions, extract_skills, hit_map::map_hits_to_set,
+};
 use arcdps_parse::{Log, Skill};
 use clap::{error::ErrorKind, CommandFactory, Parser};
 
@@ -77,6 +79,23 @@ fn main() {
             println!("Found {} effects", effects.len());
 
             args.write_output(&effects);
+        }
+
+        Command::Hitmap => {
+            let agent = args.agent_filter(&log).unwrap_or_else(|| {
+                Args::command()
+                    .error(
+                        ErrorKind::MissingRequiredArgument,
+                        "hit mapping requires agent",
+                    )
+                    .exit()
+            });
+            println!("Mapping direct damage hits to weapon sets");
+
+            let hit_map: Vec<_> = map_hits_to_set(&log, agent.address).collect();
+            println!("Found {} weapon sets", hit_map.len());
+
+            args.write_output(&hit_map);
         }
     }
 }
