@@ -24,6 +24,12 @@ arcdps_log_tools cast log.zevtc
 arcdps_log_tools cast log.zevtc --skill 123456
 arcdps_log_tools cast log.zevtc --skill "Skill Name"
 
+# extract hit to weapon set mapping
+arcdps_log_tools hitmap log.zevtc --agent 2000
+
 # extract position data
 arcdps_log_tools position log.zevtc --agent 2000
+
+# extract (visual) effect data
+arcdps_log_tools effect log.zevtc
 ```
