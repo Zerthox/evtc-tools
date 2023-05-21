@@ -1,5 +1,6 @@
 use arcdps_log_tools::{
-    extract_casts, extract_effects, extract_positions, extract_skills, hit_map::map_hits_to_set,
+    extract_casts, extract_effects, extract_gear, extract_positions, extract_skills,
+    hit_map::map_hits_to_set,
 };
 use arcdps_parse::{Log, Skill};
 use clap::{error::ErrorKind, CommandFactory, Parser};
@@ -96,6 +97,20 @@ fn main() {
             println!("Found {} weapon sets", hit_map.len());
 
             args.write_output(&hit_map);
+        }
+
+        Command::Gear => {
+            println!("Extracting POV gear");
+
+            let gear = extract_gear(&log, events);
+            println!(
+                "Found {} gear buffs, {} runes, {} sigils",
+                gear.buffs.len(),
+                gear.runes.len(),
+                gear.sigils.len()
+            );
+
+            args.write_output(&gear);
         }
     }
 }

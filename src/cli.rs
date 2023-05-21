@@ -181,17 +181,21 @@ pub enum Command {
 
     /// Map direct damage hits to weapon sets.
     Hitmap,
+
+    /// Check gear on the recording player.
+    Gear,
 }
 
 impl Command {
     pub fn suffix(&self) -> Option<&'static str> {
         match self {
+            Command::All => None,
             Command::Cast { .. } => Some("casts"),
             Command::Skill { .. } => Some("skills"),
             Command::Position => Some("positions"),
             Command::Effect => Some("effects"),
             Command::Hitmap => Some("hitmap"),
-            _ => None,
+            Command::Gear => Some("gear"),
         }
     }
 }

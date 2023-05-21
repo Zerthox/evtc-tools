@@ -84,6 +84,7 @@ version = "0.2.6"
 dependencies = [
  "arcdps_parse",
  "clap",
+ "num_enum",
  "serde",
  "serde_json",
 ]
