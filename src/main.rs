@@ -102,12 +102,15 @@ fn main() {
         Command::Gear => {
             println!("Extracting POV gear");
 
-            let gear = extract_gear(&log, events);
+            let gear = extract_gear(&log);
             println!(
                 "Found {} gear buffs, {} runes, {} sigils",
                 gear.buffs.len(),
                 gear.runes.len(),
-                gear.sigils.len()
+                gear.sigils
+                    .values()
+                    .map(|sigils| sigils.len())
+                    .sum::<usize>(),
             );
 
             args.write_output(&gear);

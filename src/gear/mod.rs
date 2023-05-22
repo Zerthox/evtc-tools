@@ -4,8 +4,8 @@ mod sigil;
 pub use self::rune::*;
 pub use self::sigil::*;
 
-use crate::log_start;
-use arcdps_parse::{CombatEvent, EventKind, Log, Profession, Specialization, StateChange};
+use crate::{log_start, WeaponMap, WeaponSet};
+use arcdps_parse::{EventKind, Log, Profession, Specialization, StateChange};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -21,9 +21,11 @@ pub struct GearInfo {
     pub profession: Profession,
     pub elite: Option<Specialization>,
     pub runes: HashSet<GearItem<Rune>>,
-    pub sigils: HashSet<GearItem<Sigil>>,
+    pub sigils: GearItemMap<Sigil>,
     pub buffs: Vec<GearBuff>,
 }
+
+pub type GearItemMap<T> = HashMap<WeaponSet, HashSet<GearItem<T>>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GearBuff {
@@ -53,6 +55,17 @@ pub struct GearItem<T> {
     pub item: T,
 }
 
+impl<T> TryFrom<GearBuff> for GearItem<T>
+where
+    T: TryFrom<u32>,
+{
+    type Error = T::Error;
+
+    fn try_from(buff: GearBuff) -> Result<Self, Self::Error> {
+        buff.id.try_into().map(|item| Self { buff, item })
+    }
+}
+
 impl<T> PartialEq for GearItem<T> {
     fn eq(&self, other: &Self) -> bool {
         self.buff.eq(&other.buff)
@@ -69,31 +82,35 @@ impl<T> Hash for GearItem<T> {
 
 const BUFF_CATEGORY_CHANGE: u64 = 138680;
 
-pub fn extract_gear<'a>(
-    log: &'a Log,
-    events: impl Iterator<Item = &'a CombatEvent> + Clone,
-) -> GearInfo {
+pub fn extract_gear(log: &Log) -> GearInfo {
     let start = log_start(log);
 
-    let build = events
-        .clone()
+    let build = log
+        .events
+        .iter()
         .find(|event| event.is_statechange == StateChange::GWBuild)
         .map(|event| event.src_agent)
         .unwrap_or_default();
 
-    let pov = events
-        .clone()
+    let pov = log
+        .events
+        .iter()
         .find(|event| event.is_statechange == StateChange::PointOfView)
         .expect("no pov");
     let agent = log.agent(pov.src_agent).expect("no pov agent");
 
-    let gear_infos: HashMap<_, _> = events
-        .clone()
+    let weapon_map = WeaponMap::new(&log.events);
+
+    let gear_infos: HashMap<_, _> = log
+        .events
+        .iter()
         .filter_map(|event| event.buff_info().map(|info| (event.skill_id, info)))
         .filter(|(_, info)| info.category == if build >= BUFF_CATEGORY_CHANGE { 7 } else { 6 })
         .collect();
 
-    let applies: Vec<_> = events
+    let applies: Vec<_> = log
+        .events
+        .iter()
         .filter(|event| {
             event.src_agent == pov.src_agent
                 && (event.is_statechange == StateChange::BuffInitial
@@ -112,14 +129,18 @@ pub fn extract_gear<'a>(
     let runes = applies
         .iter()
         .cloned()
-        .filter_map(|buff| buff.id.try_into().ok().map(|item| GearItem { buff, item }))
+        .filter_map(|buff| buff.try_into().ok())
         .collect();
 
-    let sigils = applies
-        .iter()
-        .cloned()
-        .filter_map(|buff| buff.id.try_into().ok().map(|item| GearItem { buff, item }))
-        .collect();
+    let mut sigils = GearItemMap::new();
+    for buff in &applies {
+        if let Ok(item) = GearItem::try_from(buff.clone()) {
+            let set = weapon_map
+                .set_at(item.buff.time + start)
+                .unwrap_or_default();
+            sigils.entry(set).or_default().insert(item);
+        }
+    }
 
     let buffs = applies
         .iter()

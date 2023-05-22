@@ -80,7 +80,7 @@ dependencies = [
 
 [[package]]
 name = "arcdps_log_tools"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "arcdps_parse",
  "clap",

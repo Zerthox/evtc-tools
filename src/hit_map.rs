@@ -1,5 +1,5 @@
-use crate::{log_start, Hit, HitWithSkill, Skill};
-use arcdps_parse::{EventKind, Log, StateChange, WeaponSet};
+use crate::{log_start, Hit, HitWithSkill, Skill, WeaponMap, WeaponSet};
+use arcdps_parse::{EventKind, Log};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, iter};
 
@@ -28,18 +28,7 @@ pub fn map_hits_to_set(log: &Log, agent: u64) -> impl Iterator<Item = WeaponSetH
     let mut sets: HashMap<WeaponSet, Vec<HitWithSkill>> = HashMap::new();
     let mut unknown = Vec::new();
 
-    let swaps: Vec<_> = log
-        .events
-        .iter()
-        .filter(|event| event.is_statechange == StateChange::WeaponSwap)
-        .map(|event| {
-            (
-                event.time,
-                WeaponSet::try_from(event.dst_agent).expect("unknown weapon set"),
-            )
-        })
-        .filter(|(_, set)| is_real(*set))
-        .collect();
+    let weapons = WeaponMap::new(&log.events);
 
     for event in &log.events {
         if event.kind() == EventKind::DirectDamage && event.src_agent == agent {
@@ -49,16 +38,9 @@ pub fn map_hits_to_set(log: &Log, agent: u64) -> impl Iterator<Item = WeaponSetH
             };
             new.hit.time -= start;
 
-            match swaps.binary_search_by_key(&event.time, |(time, _)| *time) {
-                Err(0) => unknown.push(new),
-                Ok(index) => {
-                    let (_, set) = swaps[index];
-                    sets.entry(set).or_default().push(new);
-                }
-                Err(index) => {
-                    let (_, set) = swaps[index - 1];
-                    sets.entry(set).or_default().push(new);
-                }
+            match weapons.set_at(event.time) {
+                None => unknown.push(new),
+                Some(set) => sets.entry(set).or_default().push(new),
             }
         }
     }
@@ -66,12 +48,5 @@ pub fn map_hits_to_set(log: &Log, agent: u64) -> impl Iterator<Item = WeaponSetH
     iter::once(WeaponSetHits::new(None, unknown)).chain(
         sets.into_iter()
             .map(|(set, hits)| WeaponSetHits::new(Some(set), hits)),
-    )
-}
-
-fn is_real(set: WeaponSet) -> bool {
-    matches!(
-        set,
-        WeaponSet::Land1 | WeaponSet::Land2 | WeaponSet::Water1 | WeaponSet::Water2
     )
 }
