@@ -2,8 +2,9 @@ use arcdps_log_tools::{
     extract_casts, extract_effects, extract_gear, extract_positions, extract_skills,
     hit_map::map_hits_to_set,
 };
-use arcdps_parse::{Log, Skill};
+use arcdps_parse::{CombatEvent, EventKind, Log, Skill};
 use clap::{error::ErrorKind, CommandFactory, Parser};
+use serde::{Deserialize, Serialize};
 
 mod cli;
 
@@ -26,7 +27,23 @@ fn main() {
 
     match &args.command {
         Command::All => {
-            let events: Vec<_> = events.map(|event| (event.kind(), event)).collect();
+            #[derive(Debug, Clone, Serialize, Deserialize)]
+            struct Event {
+                kind: EventKind,
+                #[serde(flatten)]
+                event: CombatEvent,
+            }
+
+            impl From<CombatEvent> for Event {
+                fn from(event: CombatEvent) -> Self {
+                    Self {
+                        kind: event.kind(),
+                        event,
+                    }
+                }
+            }
+
+            let events: Vec<Event> = events.cloned().map(Into::into).collect();
             println!("Found {} events", events.len());
             args.write_output(&events);
         }

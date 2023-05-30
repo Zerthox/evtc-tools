@@ -176,7 +176,7 @@ pub enum Command {
     /// Extract position data.
     Position,
 
-    ///Extract effect data.
+    ///Extract visual effect data.
     Effect,
 
     /// Map direct damage hits to weapon sets.
