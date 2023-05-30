@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Hit {
     pub time: u64,
     pub target: Agent,
-    pub kind: Strike,
+    pub kind: Option<Strike>,
     pub damage: i32,
 }
 
@@ -23,16 +23,12 @@ impl Hit {
                 result: kind,
                 value: damage,
                 ..
-            } => {
-                let kind = kind.into();
-                let target = Agent::from_log(dst_agent, log);
-                Some(Self {
-                    time,
-                    target,
-                    kind,
-                    damage,
-                })
-            }
+            } => Some(Self {
+                time,
+                target: Agent::from_log(dst_agent, log),
+                kind: kind.try_into().ok(),
+                damage,
+            }),
             _ => None,
         }
     }
