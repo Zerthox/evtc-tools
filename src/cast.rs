@@ -91,7 +91,7 @@ pub fn extract_casts<'a>(
                     src_agent,
                     ..
                 } => {
-                    let hit = Hit::try_from_event(log, event).unwrap();
+                    let hit = Hit::try_from_event(log, event, time).unwrap();
 
                     match casts
                         .get_mut(&(src_agent, skill_id))

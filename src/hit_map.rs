@@ -32,11 +32,10 @@ pub fn map_hits_to_set(log: &Log, agent: u64) -> impl Iterator<Item = WeaponSetH
 
     for event in &log.events {
         if event.kind() == EventKind::DirectDamage && event.src_agent == agent {
-            let mut new = HitWithSkill {
+            let new = HitWithSkill {
                 skill: Skill::from_log(log, event.skill_id),
-                hit: Hit::try_from_event(log, event).unwrap(),
+                hit: Hit::try_from_event(log, event, event.time - start).unwrap(),
             };
-            new.hit.time -= start;
 
             match weapons.set_at(event.time) {
                 None => unknown.push(new),

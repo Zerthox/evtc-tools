@@ -11,10 +11,9 @@ pub struct Hit {
 }
 
 impl Hit {
-    pub fn try_from_event(log: &Log, event: &CombatEvent) -> Option<Self> {
+    pub fn try_from_event(log: &Log, event: &CombatEvent, time: u64) -> Option<Self> {
         match *event {
             CombatEvent {
-                time,
                 is_statechange: StateChange::None,
                 is_activation: Activation::None,
                 is_buff_remove: BuffRemove::None,
