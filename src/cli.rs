@@ -159,15 +159,18 @@ pub enum Command {
     /// Extract all events.
     All,
 
-    /// Extract cast & hit data.
-    Cast {
+    /// Extract agents.
+    Agent,
+
+    /// Extract skill/buff information.
+    Skill {
         /// Id or name of skill to extract data for.
         #[clap(long)]
         skill: Option<String>,
     },
 
-    /// Extract skill/buff information.
-    Skill {
+    /// Extract cast & hit data.
+    Cast {
         /// Id or name of skill to extract data for.
         #[clap(long)]
         skill: Option<String>,
@@ -190,8 +193,9 @@ impl Command {
     pub fn suffix(&self) -> Option<&'static str> {
         match self {
             Command::All => None,
-            Command::Cast { .. } => Some("casts"),
+            Command::Agent => Some("agents"),
             Command::Skill { .. } => Some("skills"),
+            Command::Cast { .. } => Some("casts"),
             Command::Position => Some("positions"),
             Command::Effect => Some("effects"),
             Command::Hitmap => Some("hitmap"),

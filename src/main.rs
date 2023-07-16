@@ -48,6 +48,25 @@ fn main() {
             args.write_output(&events);
         }
 
+        Command::Agent => {
+            let agents = &log.agents;
+            println!("Found {} agents", agents.len());
+            args.write_output(agents);
+        }
+
+        Command::Skill { skill } => {
+            let skill = skill.as_ref().map(|arg| find_skill(&log, arg));
+            match skill {
+                Some(skill) => println!("Finding skill data for \"{}\" ({})", skill.name, skill.id),
+                None => println!("Finding all skill data"),
+            }
+
+            let skills = extract_skills(&log, skill.map(|skill| skill.id));
+            println!("Found {} skills/buffs", skills.len());
+
+            args.write_output(&skills);
+        }
+
         Command::Cast { skill } => {
             let skill = skill.as_ref().map(|arg| find_skill(&log, arg));
             match skill {
@@ -63,19 +82,6 @@ fn main() {
             );
 
             args.write_output(&data);
-        }
-
-        Command::Skill { skill } => {
-            let skill = skill.as_ref().map(|arg| find_skill(&log, arg));
-            match skill {
-                Some(skill) => println!("Finding skill data for \"{}\" ({})", skill.name, skill.id),
-                None => println!("Finding all skill data"),
-            }
-
-            let skills = extract_skills(&log, skill.map(|skill| skill.id));
-            println!("Found {} skills/buffs", skills.len());
-
-            args.write_output(&skills);
         }
 
         Command::Position => {
