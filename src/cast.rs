@@ -14,15 +14,19 @@ pub struct Cast {
     pub time: i32,
     pub skill: Skill,
     pub agent: Agent,
+    pub kind: Option<Activation>,
+    pub duration: Option<i32>,
     pub hits: Vec<CastHit>,
 }
 
 impl Cast {
     pub fn new(skill: Skill, agent: Agent, time: i32) -> Self {
         Self {
+            time,
             skill,
             agent,
-            time,
+            kind: None,
+            duration: None,
             hits: Vec::new(),
         }
     }
@@ -73,13 +77,30 @@ pub fn extract_casts<'a>(
                 CombatEvent {
                     is_statechange: StateChange::None,
                     is_activation: Activation::Start,
-
                     src_agent,
                     ..
                 } => {
                     let agent = Agent::from_log(src_agent, log);
                     let cast = Cast::new(skill, agent, time);
                     casts.entry((src_agent, skill_id)).or_default().push(cast);
+                }
+
+                // activation end
+                CombatEvent {
+                    is_statechange: StateChange::None,
+                    is_activation:
+                        kind @ (Activation::Reset | Activation::CancelCancel | Activation::CancelFire),
+                    src_agent,
+                    value: duration,
+                    ..
+                } => {
+                    if let Some(cast) = casts
+                        .get_mut(&(src_agent, skill_id))
+                        .and_then(|casts| casts.last_mut())
+                    {
+                        cast.kind = Some(kind);
+                        cast.duration = Some(duration);
+                    }
                 }
 
                 // direct damage
