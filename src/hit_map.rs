@@ -1,4 +1,4 @@
-use crate::{log_start, Hit, HitWithSkill, Skill, WeaponMap, WeaponSet};
+use crate::{Hit, HitWithSkill, Skill, Time, WeaponMap, WeaponSet};
 use arcdps_parse::{EventKind, Log};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, iter};
@@ -24,7 +24,7 @@ impl WeaponSetHits {
 }
 
 pub fn map_hits_to_set(log: &Log, agent: u64) -> impl Iterator<Item = WeaponSetHits> {
-    let start = log_start(log);
+    let start = Time::log_start(log);
     let mut sets: HashMap<WeaponSet, Vec<HitWithSkill>> = HashMap::new();
     let mut unknown = Vec::new();
 
@@ -34,7 +34,7 @@ pub fn map_hits_to_set(log: &Log, agent: u64) -> impl Iterator<Item = WeaponSetH
         if event.kind() == EventKind::DirectDamage && event.src_agent == agent {
             let new = HitWithSkill {
                 skill: Skill::from_log(log, event.skill_id),
-                hit: Hit::try_from_event(log, event, event.time - start).unwrap(),
+                hit: Hit::try_from_event(log, event, start.relative(event.time)).unwrap(),
             };
 
             match weapons.set_at(event.time) {

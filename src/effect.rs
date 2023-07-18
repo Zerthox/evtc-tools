@@ -1,11 +1,11 @@
-use crate::{log_start, Agent};
+use crate::{Agent, Time};
 use arcdps_parse::{CombatEvent, ContentLocal, EffectDuration, Log, Position, StateChange};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, mem::transmute};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Effect {
-    pub time: u64,
+    pub time: i32,
     pub id: u32,
     #[serde(flatten)]
     pub info: Option<EffectInfo>,
@@ -42,7 +42,7 @@ pub fn extract_effects<'a>(
     log: &'a Log,
     events: impl Iterator<Item = &'a CombatEvent> + Clone,
 ) -> Vec<Effect> {
-    let start = log_start(log);
+    let start = Time::log_start(log);
     let guids: HashMap<_, _> = events
         .clone()
         .filter(|event| event.is_statechange == StateChange::IdToGUID)
@@ -62,7 +62,7 @@ pub fn extract_effects<'a>(
             event.effect().map(|effect| {
                 let info = guids.get(&effect.effect_id).cloned();
                 Effect {
-                    time: event.time - start,
+                    time: start.relative(event.time),
                     id: effect.effect_id,
                     owner: Agent::from_log(effect.owner, log),
                     location: if effect.agent_location != 0 {

@@ -1,4 +1,4 @@
-use crate::{log_start, util::to_tick_rounded, Agent, Hit, Skill};
+use crate::{util::to_tick_rounded, Agent, Hit, Skill, Time};
 use arcdps_parse::{Activation, BuffRemove, CombatEvent, Log, StateChange};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,14 +11,14 @@ pub struct Casts {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cast {
-    pub time: u64,
+    pub time: i32,
     pub skill: Skill,
     pub agent: Agent,
     pub hits: Vec<CastHit>,
 }
 
 impl Cast {
-    pub fn new(skill: Skill, agent: Agent, time: u64) -> Self {
+    pub fn new(skill: Skill, agent: Agent, time: i32) -> Self {
         Self {
             skill,
             agent,
@@ -38,7 +38,7 @@ impl Cast {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CastHit {
-    pub tick: u64,
+    pub tick: i32,
 
     #[serde(flatten)]
     pub hit: Hit,
@@ -58,7 +58,7 @@ pub fn extract_casts<'a>(
     events: impl Iterator<Item = &'a CombatEvent>,
     skill: Option<u32>,
 ) -> Casts {
-    let start = log_start(log);
+    let start = Time::log_start(log);
     let mut casts = HashMap::<_, Vec<_>>::new();
     let mut hits_without_cast = Vec::new();
 
@@ -66,7 +66,7 @@ pub fn extract_casts<'a>(
         let skill_id = event.skill_id;
         if skill.map(|skill| skill_id == skill).unwrap_or(true) {
             let skill = Skill::from_log(log, skill_id);
-            let time = event.time - start;
+            let time = start.relative(event.time);
 
             match *event {
                 // activation start

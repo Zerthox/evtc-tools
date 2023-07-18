@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Hit {
-    pub time: u64,
+    pub time: i32,
     pub target: Agent,
     pub kind: Option<Strike>,
     pub damage: i32,
 }
 
 impl Hit {
-    pub fn try_from_event(log: &Log, event: &CombatEvent, time: u64) -> Option<Self> {
+    pub fn try_from_event(log: &Log, event: &CombatEvent, time: i32) -> Option<Self> {
         match *event {
             CombatEvent {
                 is_statechange: StateChange::None,

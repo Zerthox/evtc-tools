@@ -4,7 +4,7 @@ mod sigil;
 pub use self::rune::*;
 pub use self::sigil::*;
 
-use crate::{log_start, WeaponMap, WeaponSet};
+use crate::{Time, WeaponMap, WeaponSet};
 use arcdps_parse::{EventKind, Log, Profession, Specialization, StateChange};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -29,7 +29,7 @@ pub type GearItemMap<T> = HashMap<WeaponSet, HashSet<GearItem<T>>>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GearBuff {
-    pub time: u64,
+    pub time: i32,
     pub id: u32,
     pub log_name: String,
 }
@@ -83,7 +83,7 @@ impl<T> Hash for GearItem<T> {
 const BUFF_CATEGORY_CHANGE: u64 = 138680;
 
 pub fn extract_gear(log: &Log) -> GearInfo {
-    let start = log_start(log);
+    let start = Time::log_start(log);
 
     let build = log
         .events
@@ -120,7 +120,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
             let id = event.skill_id;
             GearBuff {
                 id,
-                time: event.time - start,
+                time: start.relative(event.time),
                 log_name: log.skill_name(id).unwrap_or_default().into(),
             }
         })
@@ -136,7 +136,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
     for buff in &applies {
         if let Ok(item) = GearItem::try_from(buff.clone()) {
             let set = weapon_map
-                .set_at(item.buff.time + start)
+                .set_at(start.absolute(item.buff.time))
                 .unwrap_or_default();
             sigils.entry(set).or_default().insert(item);
         }
