@@ -1,17 +1,19 @@
 use crate::{Agent, Time};
-use arcdps_parse::{CombatEvent, ContentLocal, EffectDuration, Log, Position, StateChange};
+use arcdps_parse::{self as arcdps, CombatEvent, ContentLocal, Log, Position};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, mem::transmute};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Effect {
     pub time: i32,
-    pub id: u32,
+    pub effect_id: u32,
     #[serde(flatten)]
     pub info: Option<EffectInfo>,
-    pub owner: Agent,
+    pub owner: Option<Agent>,
     pub location: EffectLocation,
-    pub duration: EffectDuration,
+    pub duration: u32,
+    pub tracking_id: u32,
+    pub orientation: Position,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,22 +22,19 @@ pub struct EffectInfo {
     pub content_local: Option<ContentLocal>,
 }
 
-impl EffectInfo {
-    pub fn new(guid: u128, content_local: Option<ContentLocal>) -> Self {
-        Self {
-            guid: format!("{:0>32X}", guid),
-            content_local,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EffectLocation {
     Agent(Agent),
-    Coordinates {
-        position: Position,
-        orientation: Position,
-    },
+    Position(Position),
+}
+
+impl EffectLocation {
+    pub fn from_location(location: arcdps::EffectLocation, log: &Log) -> Self {
+        match location {
+            arcdps::EffectLocation::Agent(id) => Self::Agent(Agent::from_log(id, log)),
+            arcdps::EffectLocation::Position(pos) => Self::Position(pos),
+        }
+    }
 }
 
 pub fn extract_effects<'a>(
@@ -45,14 +44,14 @@ pub fn extract_effects<'a>(
     let start = Time::log_start(log);
     let guids: HashMap<_, _> = events
         .clone()
-        .filter(|event| event.is_statechange == StateChange::IdToGUID)
+        .filter_map(|event| event.effect_guid())
         .map(|event| {
             (
-                event.skill_id,
-                EffectInfo::new(
-                    u128::from_be_bytes(unsafe { transmute([event.src_agent, event.dst_agent]) }),
-                    event.overstack_value.try_into().ok(),
-                ),
+                event.effect_id,
+                EffectInfo {
+                    guid: event.guid_string(),
+                    content_local: event.content_local,
+                },
             )
         })
         .collect();
@@ -63,36 +62,19 @@ pub fn extract_effects<'a>(
                 let info = guids.get(&effect.effect_id).cloned();
                 Effect {
                     time: start.relative(event.time),
-                    id: effect.effect_id,
-                    owner: Agent::from_log(effect.owner, log),
-                    location: if effect.agent_location != 0 {
-                        EffectLocation::Agent(Agent::from_log(effect.agent_location, log))
-                    } else {
-                        EffectLocation::Coordinates {
-                            position: effect.location,
-                            orientation: effect.orientation,
-                        }
-                    },
-                    duration: effect.duration,
+                    effect_id: effect.effect_id,
                     info,
+                    owner: if effect.owner != 0 {
+                        Some(Agent::from_log(effect.owner, log))
+                    } else {
+                        None
+                    },
+                    location: EffectLocation::from_location(effect.location, log),
+                    duration: effect.duration,
+                    tracking_id: effect.tracking_id,
+                    orientation: effect.orientation.into(),
                 }
             })
         })
         .collect()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn guid_format() {
-        let guid1: u128 = 0;
-        let guid2: u128 = 0x0123456789ABCDEF0123456789ABCDEF;
-        let info1 = EffectInfo::new(guid1, None);
-        let info2 = EffectInfo::new(guid2, None);
-
-        assert_eq!(info1.guid, "00000000000000000000000000000000");
-        assert_eq!(info2.guid, "0123456789ABCDEF0123456789ABCDEF");
-    }
 }
