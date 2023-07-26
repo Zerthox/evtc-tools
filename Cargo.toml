@@ -11,6 +11,3 @@ clap = { version = "4.2.1", features = ["derive"] }
 num_enum = "0.6.1"
 serde = { version = "1.0.159", features = ["derive"] }
 serde_json = "1.0.95"
-
-[patch."https://github.com/zerthox/arcdps-bindings"]
-arcdps_parse = { path = "../arcdps-bindings/arcdps_parse" }
