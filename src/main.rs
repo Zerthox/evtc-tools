@@ -127,9 +127,10 @@ fn main() {
 
             let gear = extract_gear(&log);
             println!(
-                "Found {} gear buffs, {} runes, {} sigils",
+                "Found {} gear buffs, {} runes, {} relics, {} sigils",
                 gear.buffs.len(),
                 gear.runes.len(),
+                gear.relics.len(),
                 gear.sigils
                     .values()
                     .map(|sigils| sigils.len())

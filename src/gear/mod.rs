@@ -1,6 +1,8 @@
+mod relic;
 mod rune;
 mod sigil;
 
+pub use self::relic::*;
 pub use self::rune::*;
 pub use self::sigil::*;
 
@@ -21,6 +23,7 @@ pub struct GearInfo {
     pub profession: Profession,
     pub elite: Option<Specialization>,
     pub runes: HashSet<GearItem<Rune>>,
+    pub relics: HashSet<GearItem<Relic>>,
     pub sigils: GearItemMap<Sigil>,
     pub buffs: Vec<GearBuff>,
 }
@@ -132,6 +135,12 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         .filter_map(|buff| buff.try_into().ok())
         .collect();
 
+    let relics = applies
+        .iter()
+        .cloned()
+        .filter_map(|buff| buff.try_into().ok())
+        .collect();
+
     let mut sigils = GearItemMap::new();
     for buff in &applies {
         if let Ok(item) = GearItem::try_from(buff.clone()) {
@@ -159,6 +168,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
             elite => Some(elite),
         },
         runes,
+        relics,
         sigils,
         buffs,
     }
