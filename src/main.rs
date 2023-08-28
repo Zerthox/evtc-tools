@@ -127,14 +127,14 @@ fn main() {
 
             let gear = extract_gear(&log);
             println!(
-                "Found {} gear buffs, {} runes, {} relics, {} sigils",
-                gear.buffs.len(),
+                "Found {} runes, {} relics, {} sigils, {} unknown gear buffs",
                 gear.runes.len(),
                 gear.relics.len(),
                 gear.sigils
                     .values()
                     .map(|sigils| sigils.len())
                     .sum::<usize>(),
+                gear.other.len(),
             );
 
             args.write_output(&gear);

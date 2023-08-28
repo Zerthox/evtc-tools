@@ -1,20 +1,21 @@
 mod infusion;
+mod item;
 mod relic;
 mod rune;
 mod sigil;
 
 pub use self::infusion::*;
+pub use self::item::*;
 pub use self::relic::*;
 pub use self::rune::*;
 pub use self::sigil::*;
 
 use crate::{Time, WeaponMap, WeaponSet};
+use arcdps_parse::BuffCategory;
+use arcdps_parse::BuffCategoryOld;
 use arcdps_parse::{EventKind, Log, Profession, Specialization, StateChange};
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::{HashMap, HashSet},
-    hash::{Hash, Hasher},
-};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GearInfo {
@@ -27,63 +28,10 @@ pub struct GearInfo {
     pub runes: HashSet<GearItem<Rune>>,
     pub relics: HashSet<GearItem<Relic>>,
     pub sigils: GearItemMap<Sigil>,
-    pub buffs: Vec<GearBuff>,
+    pub other: Vec<GearBuff>,
 }
 
 pub type GearItemMap<T> = HashMap<WeaponSet, HashSet<GearItem<T>>>;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GearBuff {
-    pub time: i32,
-    pub id: u32,
-    pub log_name: String,
-}
-
-impl PartialEq for GearBuff {
-    fn eq(&self, other: &Self) -> bool {
-        self.id == other.id
-    }
-}
-
-impl Eq for GearBuff {}
-
-impl Hash for GearBuff {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write_u32(self.id)
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GearItem<T> {
-    #[serde(flatten)]
-    pub buff: GearBuff,
-    pub item: T,
-}
-
-impl<T> TryFrom<GearBuff> for GearItem<T>
-where
-    T: TryFrom<u32>,
-{
-    type Error = T::Error;
-
-    fn try_from(buff: GearBuff) -> Result<Self, Self::Error> {
-        buff.id.try_into().map(|item| Self { buff, item })
-    }
-}
-
-impl<T> PartialEq for GearItem<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.buff.eq(&other.buff)
-    }
-}
-
-impl<T> Eq for GearItem<T> {}
-
-impl<T> Hash for GearItem<T> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.buff.hash(state)
-    }
-}
 
 const BUFF_CATEGORY_CHANGE: u64 = 138680;
 
@@ -96,6 +44,11 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         .find(|event| event.is_statechange == StateChange::GWBuild)
         .map(|event| event.src_agent)
         .unwrap_or_default();
+    let gear_category = if build >= BUFF_CATEGORY_CHANGE {
+        BuffCategory::Upgrade as u8
+    } else {
+        BuffCategoryOld::Upgrade as u8
+    };
 
     let pov = log
         .events
@@ -110,10 +63,10 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         .events
         .iter()
         .filter_map(|event| event.buff_info().map(|info| (event.skill_id, info)))
-        .filter(|(_, info)| info.category == if build >= BUFF_CATEGORY_CHANGE { 7 } else { 6 })
+        .filter(|(_, info)| info.category == gear_category)
         .collect();
 
-    let applies: Vec<_> = log
+    let buff_applies: Vec<_> = log
         .events
         .iter()
         .filter(|event| {
@@ -131,33 +84,28 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         })
         .collect();
 
-    let runes = applies
-        .iter()
-        .cloned()
-        .filter_map(|buff| buff.try_into().ok())
-        .collect();
-
-    let relics = applies
-        .iter()
-        .cloned()
-        .filter_map(|buff| buff.try_into().ok())
-        .collect();
-
+    let mut runes = HashSet::new();
+    let mut relics = HashSet::new();
     let mut sigils = GearItemMap::new();
-    for buff in &applies {
-        if let Ok(item) = GearItem::try_from(buff.clone()) {
+    let mut other = Vec::new();
+    for buff in buff_applies.into_iter() {
+        let id = buff.id;
+        if let Ok(rune) = Rune::try_from(id) {
+            runes.insert(GearItem::new(buff, rune));
+        } else if let Ok(relic) = Relic::try_from(id) {
+            relics.insert(GearItem::new(buff, relic));
+        } else if let Ok(sigil) = Sigil::try_from(id) {
             let set = weapon_map
-                .set_at(start.absolute(item.buff.time))
+                .set_at(start.absolute(buff.time))
                 .unwrap_or_default();
-            sigils.entry(set).or_default().insert(item);
+            sigils
+                .entry(set)
+                .or_default()
+                .insert(GearItem::new(buff, sigil));
+        } else if gear_infos.contains_key(&buff.id) {
+            other.push(buff);
         }
     }
-
-    let buffs = applies
-        .iter()
-        .filter(|buff| gear_infos.contains_key(&buff.id))
-        .cloned()
-        .collect();
 
     GearInfo {
         id: pov.src_agent,
@@ -172,6 +120,6 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         runes,
         relics,
         sigils,
-        buffs,
+        other,
     }
 }
