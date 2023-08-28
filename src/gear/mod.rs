@@ -1,7 +1,9 @@
+mod infusion;
 mod relic;
 mod rune;
 mod sigil;
 
+pub use self::infusion::*;
 pub use self::relic::*;
 pub use self::rune::*;
 pub use self::sigil::*;
