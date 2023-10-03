@@ -32,11 +32,11 @@ pub struct Args {
     pub target: Option<String>,
 
     /// Minimum timestamp.
-    #[clap(long, global = true)]
+    #[clap(short, long, global = true)]
     pub start: Option<u64>,
 
     /// Maximum timestamp.
-    #[clap(long, global = true)]
+    #[clap(short, long, global = true)]
     pub end: Option<u64>,
 }
 
