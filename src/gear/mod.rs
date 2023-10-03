@@ -57,7 +57,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         .expect("no pov");
     let agent = log.agent(pov.src_agent).expect("no pov agent");
 
-    let weapon_map = WeaponMap::new(&log.events);
+    let weapon_map = WeaponMap::new(&log.events, agent.address);
 
     let gear_infos: HashMap<_, _> = log
         .events

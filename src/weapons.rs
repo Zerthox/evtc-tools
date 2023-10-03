@@ -8,11 +8,13 @@ pub struct WeaponMap {
 }
 
 impl WeaponMap {
-    pub fn new<'a>(events: impl IntoIterator<Item = &'a CombatEvent>) -> Self {
+    pub fn new<'a>(events: impl IntoIterator<Item = &'a CombatEvent>, agent: u64) -> Self {
         Self {
             swaps: events
                 .into_iter()
-                .filter(|event| event.is_statechange == StateChange::WeaponSwap)
+                .filter(|event| {
+                    event.src_agent == agent && event.is_statechange == StateChange::WeaponSwap
+                })
                 .filter_map(|event| {
                     arcdps::WeaponSet::try_from(event.dst_agent)
                         .ok()

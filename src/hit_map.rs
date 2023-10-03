@@ -32,7 +32,7 @@ pub fn map_hits_to_set<'a>(
     let mut sets: HashMap<WeaponSet, Vec<HitWithSkill>> = HashMap::new();
     let mut unknown = Vec::new();
 
-    let weapons = WeaponMap::new(log.events.iter().filter(|event| event.src_agent == agent));
+    let weapons = WeaponMap::new(&log.events, agent);
 
     for event in events {
         if event.kind() == EventKind::DirectDamage && event.src_agent == agent {
