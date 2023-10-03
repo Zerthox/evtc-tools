@@ -85,8 +85,8 @@ impl Args {
             start + self.start.unwrap_or(0)..=self.end.map(|end| start + end).unwrap_or(u64::MAX);
 
         log.events.iter().filter(move |event| {
-            src.filter(event)
-                && dst.filter(event)
+            src.filter_src(event)
+                && dst.filter_dst(event)
                 && event
                     .time()
                     .map(|time| range.contains(&time))
@@ -161,11 +161,19 @@ impl AgentFilter {
         }
     }
 
-    fn filter(&self, event: &CombatEvent) -> bool {
+    fn filter_src(&self, event: &CombatEvent) -> bool {
         match *self {
             Self::None => true,
             Self::ArcId(id) => event.src_agent == id,
             Self::InstId(id) => event.src_instance_id == id,
+        }
+    }
+
+    fn filter_dst(&self, event: &CombatEvent) -> bool {
+        match *self {
+            Self::None => true,
+            Self::ArcId(id) => event.dst_agent == id,
+            Self::InstId(id) => event.dst_instance_id == id,
         }
     }
 }
