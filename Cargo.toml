@@ -8,6 +8,9 @@ description = "Extract information from ArcDPS EVTC log files."
 [dependencies]
 arcdps_parse = { git = "https://github.com/zerthox/arcdps-bindings", features = ["serde", "zevtc"] }
 clap = { version = "4.2.1", features = ["derive"] }
-num_enum = "0.6.1"
+num_enum = "0.7.0"
 serde = { version = "1.0.159", features = ["derive"] }
 serde_json = "1.0.95"
+
+# [patch."https://github.com/zerthox/arcdps-bindings"]
+# arcdps_parse = { path = "../arcdps-bindings/arcdps_parse" }

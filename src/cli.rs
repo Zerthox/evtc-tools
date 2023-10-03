@@ -1,3 +1,4 @@
+use arcdps_log_tools::Time;
 use arcdps_parse::{parse_file, Agent, CombatEvent, Log};
 use clap::Parser;
 use std::{
@@ -29,6 +30,14 @@ pub struct Args {
     /// Id or name of destination agent to filter data for.
     #[clap(short, long, global = true)]
     pub target: Option<String>,
+
+    /// Minimum timestamp.
+    #[clap(long, global = true)]
+    pub start: Option<u64>,
+
+    /// Maximum timestamp.
+    #[clap(long, global = true)]
+    pub end: Option<u64>,
 }
 
 impl Args {
@@ -36,10 +45,10 @@ impl Args {
         parse_file(&self.input).expect("failed to parse EVTC log")
     }
 
-    fn create_filter(log: &Log, arg: &Option<String>, kind: &str) -> Filter {
+    fn create_filter(log: &Log, arg: &Option<String>, kind: &str) -> AgentFilter {
         arg.as_deref()
             .map(|arg| {
-                let filter = Filter::parse(log, arg);
+                let filter = AgentFilter::parse(log, arg);
                 let agent = filter.agent(log);
                 match (&filter, agent) {
                     (_, Some(agent)) => {
@@ -48,10 +57,10 @@ impl Args {
                             kind, agent.name[0], agent.address
                         )
                     }
-                    (Filter::ArcId(id), None) => {
+                    (AgentFilter::ArcId(id), None) => {
                         println!("Agent {} filter: unknown agent id {}", kind, id)
                     }
-                    (Filter::InstId(id), None) => {
+                    (AgentFilter::InstId(id), None) => {
                         println!("Agent {} filter: unknown agent instance id {}", kind, id)
                     }
                     _ => {}
@@ -63,7 +72,7 @@ impl Args {
 
     pub fn agent_filter<'a>(&self, log: &'a Log) -> Option<&'a Agent> {
         self.agent.as_ref().and_then(|arg| {
-            let filter = Filter::parse(log, arg);
+            let filter = AgentFilter::parse(log, arg);
             filter.agent(log)
         })
     }
@@ -71,10 +80,18 @@ impl Args {
     pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> + Clone {
         let src = Self::create_filter(log, &self.agent, "source");
         let dst = Self::create_filter(log, &self.target, "dest");
+        let start = Time::log_start(log).absolute;
+        let range =
+            start + self.start.unwrap_or(0)..=self.end.map(|end| start + end).unwrap_or(u64::MAX);
 
-        log.events
-            .iter()
-            .filter(move |event| src.filter(event) && dst.filter(event))
+        log.events.iter().filter(move |event| {
+            src.filter(event)
+                && dst.filter(event)
+                && event
+                    .time()
+                    .map(|time| range.contains(&time))
+                    .unwrap_or(true)
+        })
     }
 
     pub fn write_output<T>(&self, value: &T)
@@ -107,14 +124,14 @@ impl Args {
 
 // TODO: filter all by name not just first id
 #[derive(Debug, Default, Clone)]
-enum Filter {
+enum AgentFilter {
     #[default]
     None,
     ArcId(u64),
     InstId(u16),
 }
 
-impl Filter {
+impl AgentFilter {
     fn parse(log: &Log, value: &str) -> Self {
         if let Some(string) = value.strip_prefix("inst:") {
             let id = string.parse().expect("invalid instance id");

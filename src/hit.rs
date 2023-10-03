@@ -35,8 +35,8 @@ impl Hit {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HitWithSkill {
-    pub skill: Skill,
-
     #[serde(flatten)]
     pub hit: Hit,
+
+    pub skill: Skill,
 }
