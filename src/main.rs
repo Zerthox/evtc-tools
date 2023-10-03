@@ -116,7 +116,7 @@ fn main() {
             });
             println!("Mapping direct damage hits to weapon sets");
 
-            let hit_map: Vec<_> = map_hits_to_set(&log, events, agent.address).collect();
+            let hit_map = map_hits_to_set(&log, events, agent.address);
             println!("Found {} weapon sets", hit_map.len());
 
             args.write_output(&hit_map);

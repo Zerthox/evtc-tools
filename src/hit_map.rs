@@ -27,7 +27,7 @@ pub fn map_hits_to_set<'a>(
     log: &'a Log,
     events: impl IntoIterator<Item = &'a CombatEvent>,
     agent: u64,
-) -> impl Iterator<Item = WeaponSetHits> {
+) -> Vec<WeaponSetHits> {
     let start = Time::log_start(log);
     let mut sets: HashMap<WeaponSet, Vec<HitWithSkill>> = HashMap::new();
     let weapons = WeaponMap::new(&log.events, agent);
@@ -44,6 +44,16 @@ pub fn map_hits_to_set<'a>(
         }
     }
 
-    sets.into_iter()
+    let mut sets = sets
+        .into_iter()
         .map(|(set, hits)| WeaponSetHits::new(set, hits))
+        .collect::<Vec<_>>();
+    sets.sort_by_key(|entry| {
+        entry
+            .hits
+            .first()
+            .map(|entry| entry.hit.time)
+            .unwrap_or_default()
+    });
+    sets
 }
