@@ -1,4 +1,8 @@
-use arcdps_parse::{BuffFormula, BuffInfo, Log, SkillInfo, SkillTiming};
+use evtc_parse::{
+    buff::{BuffFormula, BuffInfo},
+    skill::{SkillInfo, SkillTiming},
+    Log,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -52,17 +56,23 @@ pub fn extract_skills(log: &Log, id: Option<u32>) -> Vec<SkillWithInfo> {
             let name = skill.name.clone();
             let iter = log.events.iter().filter(|event| event.skill_id == skill.id);
 
-            let kind = if let Some(info) = iter.clone().find_map(|event| event.skill_info()) {
+            let kind = if let Some(info) = iter
+                .clone()
+                .find_map(|event| event.try_extract::<SkillInfo>())
+            {
                 let timings = iter
                     .clone()
-                    .filter_map(|event| event.skill_timing())
+                    .filter_map(|event| event.try_extract::<SkillTiming>())
                     .collect();
 
                 Some(SkillKind::Skill { info, timings })
-            } else if let Some(info) = iter.clone().find_map(|event| event.buff_info()) {
+            } else if let Some(info) = iter
+                .clone()
+                .find_map(|event| event.try_extract::<BuffInfo>())
+            {
                 let formulas = iter
                     .clone()
-                    .filter_map(|event| event.buff_formula())
+                    .filter_map(|event| event.try_extract::<BuffFormula>())
                     .collect();
 
                 Some(SkillKind::Buff { info, formulas })

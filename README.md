@@ -1,4 +1,4 @@
-# ArcDPS Log Tools
+# EVTC Tools
 Extract information from ArcDPS EVTC log files.
 
 ## Usage
@@ -6,30 +6,30 @@ You can download available [builds from GitHub Actions](https://github.com/Zerth
 
 ```sh
 # extract all events
-arcdps_log_tools all path/to/log.zevtc
+evtc_tools all path/to/log.zevtc
 
 # filter events for specific source/dest agent
-arcdps_log_tools all log.zevtc --agent 2000 # using arcdps id
-arcdps_log_tools all log.zevtc --agent inst:123 # using instance id
-arcdps_log_tools all log.zevtc --agent "Agent Name"
-arcdps_log_tools all log.zevtc --target "Target Name"
+evtc_tools all log.zevtc --agent 2000 # using arcdps id
+evtc_tools all log.zevtc --agent inst:123 # using instance id
+evtc_tools all log.zevtc --agent "Agent Name"
+evtc_tools all log.zevtc --target "Target Name"
 
 # extract skill/buff information with optional filter
-arcdps_log_tools skill log.zevtc
-arcdps_log_tools skill log.zevtc --skill 123456
-arcdps_log_tools skill log.zevtc --skill "Skill/Buff Name"
+evtc_tools skill log.zevtc
+evtc_tools skill log.zevtc --skill 123456
+evtc_tools skill log.zevtc --skill "Skill/Buff Name"
 
 # extract casts with optional filter
-arcdps_log_tools cast log.zevtc
-arcdps_log_tools cast log.zevtc --skill 123456
-arcdps_log_tools cast log.zevtc --skill "Skill Name"
+evtc_tools cast log.zevtc
+evtc_tools cast log.zevtc --skill 123456
+evtc_tools cast log.zevtc --skill "Skill Name"
 
 # extract hit to weapon set mapping
-arcdps_log_tools hitmap log.zevtc --agent 2000
+evtc_tools hitmap log.zevtc --agent 2000
 
 # extract position data
-arcdps_log_tools position log.zevtc --agent 2000
+evtc_tools position log.zevtc --agent 2000
 
 # extract (visual) effect data
-arcdps_log_tools effect log.zevtc
+evtc_tools effect log.zevtc
 ```

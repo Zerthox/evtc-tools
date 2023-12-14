@@ -11,9 +11,12 @@ pub use self::rune::*;
 pub use self::sigil::*;
 
 use crate::{Time, WeaponMap, WeaponSet};
-use arcdps_parse::BuffCategory;
-use arcdps_parse::BuffCategoryOld;
-use arcdps_parse::{EventKind, Log, Profession, Specialization, StateChange};
+use evtc_parse::event::BuffApplyEvent;
+use evtc_parse::event::BuffInfo;
+use evtc_parse::{
+    buff::{BuffCategory, BuffCategoryOld},
+    Log, Profession, Specialization, StateChange,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -41,7 +44,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
     let build = log
         .events
         .iter()
-        .find(|event| event.is_statechange == StateChange::GWBuild)
+        .find(|event| event.get_statechange() == StateChange::GWBuild)
         .map(|event| event.src_agent)
         .unwrap_or_default();
     let gear_category = if build >= BUFF_CATEGORY_CHANGE {
@@ -53,27 +56,24 @@ pub fn extract_gear(log: &Log) -> GearInfo {
     let pov = log
         .events
         .iter()
-        .find(|event| event.is_statechange == StateChange::PointOfView)
+        .find(|event| event.get_statechange() == StateChange::PointOfView)
         .expect("no pov");
     let agent = log.agent(pov.src_agent).expect("no pov agent");
 
-    let weapon_map = WeaponMap::new(&log.events, agent.address);
+    let weapon_map = WeaponMap::new(&log.events, agent.id);
 
     let gear_infos: HashMap<_, _> = log
         .events
         .iter()
-        .filter_map(|event| event.buff_info().map(|info| (event.skill_id, info)))
+        .filter_map(|event| event.try_extract::<BuffInfo>())
+        .map(|info| (info.skill_id, info))
         .filter(|(_, info)| info.category == gear_category)
         .collect();
 
     let buff_applies: Vec<_> = log
         .events
         .iter()
-        .filter(|event| {
-            event.src_agent == pov.src_agent
-                && (event.is_statechange == StateChange::BuffInitial
-                    || event.kind() == EventKind::BuffApply)
-        })
+        .filter_map(|event| event.try_extract::<BuffApplyEvent>())
         .map(|event| {
             let id = event.skill_id;
             GearBuff {

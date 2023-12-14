@@ -1,4 +1,4 @@
-use arcdps_parse::{Log, StateChange};
+use evtc_parse::{Log, StateChange};
 
 /// A point in time.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -17,7 +17,7 @@ impl Time {
         let time = log
             .events
             .iter()
-            .find(|event| event.is_statechange == StateChange::LogStart)
+            .find(|event| event.get_statechange() == StateChange::LogStart)
             .map(|event| event.time)
             .expect("no log start event");
         Self::new(time)

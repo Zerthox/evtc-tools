@@ -15,7 +15,7 @@ jobs:
       - run: cargo build --release
       - uses: actions/upload-artifact@v3
         with:
-            name: arcdps_log_tools_${{ matrix.os }}
+            name: evtc_tools_${{ matrix.os }}
             path: |
-                target/release/arcdps_log_tools
-                target/release/arcdps_log_tools.exe
+                target/release/evtc_tools
+                target/release/evtc_tools.exe

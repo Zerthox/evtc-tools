@@ -1,4 +1,3 @@
-use arcdps_parse as arcdps;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,7 +14,7 @@ impl Agent {
         }
     }
 
-    pub fn from_log(id: u64, log: &arcdps::Log) -> Self {
+    pub fn from_log(id: u64, log: &evtc_parse::Log) -> Self {
         Self::new(id, log.agent_name(id).and_then(|names| names.first()))
     }
 }

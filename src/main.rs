@@ -1,9 +1,9 @@
-use arcdps_log_tools::{
+use clap::{error::ErrorKind, CommandFactory, Parser};
+use evtc_parse::{EventKind, Log, Skill};
+use evtc_tools::{
     extract_casts, extract_effects, extract_gear, extract_positions, extract_skills,
     hit_map::map_hits_to_set, Time,
 };
-use arcdps_parse::{CombatEvent, EventKind, Log, Skill};
-use clap::{error::ErrorKind, CommandFactory, Parser};
 use serde::{Deserialize, Serialize};
 
 mod cli;
@@ -29,19 +29,17 @@ fn main() {
         Command::All => {
             #[derive(Debug, Clone, Serialize, Deserialize)]
             struct Event {
-                kind: EventKind,
                 time_since_start: Option<i32>,
                 #[serde(flatten)]
-                event: CombatEvent,
+                event: EventKind,
             }
             let start = Time::log_start(&log);
 
             let events: Vec<Event> = events
                 .cloned()
                 .map(|event| Event {
-                    kind: event.kind(),
                     time_since_start: event.time().map(|time| start.relative(time)),
-                    event,
+                    event: event.into_kind(),
                 })
                 .collect();
             println!("Found {} events", events.len());
@@ -116,7 +114,7 @@ fn main() {
             });
             println!("Mapping direct damage hits to weapon sets");
 
-            let hit_map = map_hits_to_set(&log, events, agent.address);
+            let hit_map = map_hits_to_set(&log, events, agent.id);
             println!("Found {} weapon sets", hit_map.len());
 
             args.write_output(&hit_map);

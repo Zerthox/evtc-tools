@@ -1,6 +1,6 @@
-use arcdps_log_tools::Time;
-use arcdps_parse::{parse_file, Agent, CombatEvent, Log};
 use clap::Parser;
+use evtc_parse::{parse_file, Agent, Event, Log};
+use evtc_tools::Time;
 use std::{
     fs::File,
     io::BufWriter,
@@ -54,7 +54,7 @@ impl Args {
                     (_, Some(agent)) => {
                         println!(
                             "Agent {} filter: \"{}\" ({})",
-                            kind, agent.name[0], agent.address
+                            kind, agent.name[0], agent.id
                         )
                     }
                     (AgentFilter::ArcId(id), None) => {
@@ -77,7 +77,7 @@ impl Args {
         })
     }
 
-    pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a CombatEvent> + Clone {
+    pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a Event> + Clone {
         let src = Self::create_filter(log, &self.agent, "source");
         let dst = Self::create_filter(log, &self.target, "dest");
         let start = Time::log_start(log).absolute;
@@ -143,7 +143,7 @@ impl AgentFilter {
                     .agents
                     .iter()
                     .find(|agent| agent.name[0] == value)
-                    .map(|agent| Self::ArcId(agent.address))
+                    .map(|agent| Self::ArcId(agent.id))
                     .unwrap_or_else(|| panic!("failed to find agent \"{}\"", value)),
             }
         }
@@ -161,7 +161,7 @@ impl AgentFilter {
         }
     }
 
-    fn filter_src(&self, event: &CombatEvent) -> bool {
+    fn filter_src(&self, event: &Event) -> bool {
         match *self {
             Self::None => true,
             Self::ArcId(id) => event.src_agent == id,
@@ -169,7 +169,7 @@ impl AgentFilter {
         }
     }
 
-    fn filter_dst(&self, event: &CombatEvent) -> bool {
+    fn filter_dst(&self, event: &Event) -> bool {
         match *self {
             Self::None => true,
             Self::ArcId(id) => event.dst_agent == id,

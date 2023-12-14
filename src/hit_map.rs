@@ -1,5 +1,5 @@
 use crate::{Hit, HitWithSkill, Skill, Time, WeaponMap, WeaponSet};
-use arcdps_parse::{CombatEvent, EventKind, Log};
+use evtc_parse::{Event, EventCategory, Log};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -25,7 +25,7 @@ impl WeaponSetHits {
 
 pub fn map_hits_to_set<'a>(
     log: &'a Log,
-    events: impl IntoIterator<Item = &'a CombatEvent>,
+    events: impl IntoIterator<Item = &'a Event>,
     agent: u64,
 ) -> Vec<WeaponSetHits> {
     let start = Time::log_start(log);
@@ -33,7 +33,7 @@ pub fn map_hits_to_set<'a>(
     let weapons = WeaponMap::new(&log.events, agent);
 
     for event in events {
-        if event.kind() == EventKind::DirectDamage {
+        if event.categorize() == EventCategory::Strike {
             let new = HitWithSkill {
                 skill: Skill::from_log(log, event.skill_id),
                 hit: Hit::try_from_event(log, event, start.relative(event.time)).unwrap(),

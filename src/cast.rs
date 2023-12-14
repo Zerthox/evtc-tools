@@ -1,5 +1,5 @@
 use crate::{util::to_tick_rounded, Agent, Hit, Skill, Time};
-use arcdps_parse::{Activation, BuffRemove, CombatEvent, Log, StateChange};
+use evtc_parse::{Activation, Event, EventKind, Log};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -59,7 +59,7 @@ pub struct StandaloneHit {
 
 pub fn extract_casts<'a>(
     log: &'a Log,
-    events: impl Iterator<Item = &'a CombatEvent>,
+    events: impl Iterator<Item = &'a Event>,
     skill: Option<u32>,
 ) -> Casts {
     let start = Time::log_start(log);
@@ -72,57 +72,42 @@ pub fn extract_casts<'a>(
             let skill = Skill::from_log(log, skill_id);
             let time = start.relative(event.time);
 
-            match *event {
-                // activation start
-                CombatEvent {
-                    is_statechange: StateChange::None,
-                    is_activation: Activation::Start,
-                    src_agent,
-                    ..
-                } => {
-                    let agent = Agent::from_log(src_agent, log);
-                    let cast = Cast::new(skill, agent, time);
-                    casts.entry((src_agent, skill_id)).or_default().push(cast);
-                }
-
-                // activation end
-                CombatEvent {
-                    is_statechange: StateChange::None,
-                    is_activation:
-                        kind @ (Activation::Reset | Activation::CancelCancel | Activation::CancelFire),
-                    src_agent,
-                    value: duration,
-                    ..
-                } => {
-                    if let Some(cast) = casts
-                        .get_mut(&(src_agent, skill_id))
-                        .and_then(|casts| casts.last_mut())
-                    {
-                        cast.kind = Some(kind);
-                        cast.duration = Some(duration);
+            match event.clone().into_kind() {
+                EventKind::Activation(event) => {
+                    let agent_id = event.agent.id;
+                    match event.activation {
+                        Activation::Start => {
+                            let agent = Agent::from_log(agent_id, log);
+                            let cast = Cast::new(skill, agent, time);
+                            casts.entry((agent_id, skill_id)).or_default().push(cast);
+                        }
+                        kind @ (Activation::Reset
+                        | Activation::CancelCancel
+                        | Activation::CancelFire) => {
+                            if let Some(cast) = casts
+                                .get_mut(&(agent_id, skill_id))
+                                .and_then(|casts| casts.last_mut())
+                            {
+                                cast.kind = Some(kind);
+                                cast.duration = Some(event.duration);
+                            }
+                        }
+                        _ => {}
                     }
                 }
 
-                // direct damage
-                CombatEvent {
-                    is_statechange: StateChange::None,
-                    is_activation: Activation::None,
-                    is_buff_remove: BuffRemove::None,
-                    buff: 0,
-                    src_agent,
-                    ..
-                } => {
+                EventKind::Strike(_) => {
                     let hit = Hit::try_from_event(log, event, time).unwrap();
-
+                    let agent = event.src_agent;
                     match casts
-                        .get_mut(&(src_agent, skill_id))
+                        .get_mut(&(agent, skill_id))
                         .and_then(|casts| casts.last_mut())
                     {
                         Some(cast) => cast.add_hit(hit),
                         None => hits_without_cast.push(StandaloneHit {
                             hit,
                             skill,
-                            agent: Agent::from_log(src_agent, log),
+                            agent: Agent::from_log(agent, log),
                         }),
                     }
                 }

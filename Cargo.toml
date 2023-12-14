@@ -1,16 +1,13 @@
 [package]
-name = "arcdps_log_tools"
-version = "0.3.0"
+name = "evtc_tools"
+version = "0.4.0"
 edition = "2021"
 authors = ["Zerthox"]
 description = "Extract information from ArcDPS EVTC log files."
 
 [dependencies]
-arcdps_parse = { git = "https://github.com/zerthox/arcdps-bindings", features = ["serde", "zevtc"] }
+evtc_parse = { git = "https://github.com/zerthox/arcdps-rs", features = ["serde", "zevtc"] }
 clap = { version = "4.2.1", features = ["derive"] }
 num_enum = "0.7.0"
 serde = { version = "1.0.159", features = ["derive"] }
 serde_json = "1.0.95"
-
-# [patch."https://github.com/zerthox/arcdps-bindings"]
-# arcdps_parse = { path = "../arcdps-bindings/arcdps_parse" }

@@ -1,5 +1,5 @@
 use crate::{Agent, Time};
-use arcdps_parse::{self as arcdps, CombatEvent, ContentLocal, Log, Position};
+use evtc_parse::{self as evtc, effect::ContentLocal, Event, Log, Position};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -29,22 +29,22 @@ pub enum EffectLocation {
 }
 
 impl EffectLocation {
-    pub fn from_location(location: arcdps::EffectLocation, log: &Log) -> Self {
+    pub fn from_location(location: evtc::effect::EffectLocation, log: &Log) -> Self {
         match location {
-            arcdps::EffectLocation::Agent(id) => Self::Agent(Agent::from_log(id, log)),
-            arcdps::EffectLocation::Position(pos) => Self::Position(pos),
+            evtc::effect::EffectLocation::Agent(id) => Self::Agent(Agent::from_log(id, log)),
+            evtc::effect::EffectLocation::Position(pos) => Self::Position(pos),
         }
     }
 }
 
 pub fn extract_effects<'a>(
     log: &'a Log,
-    events: impl Iterator<Item = &'a CombatEvent> + Clone,
+    events: impl Iterator<Item = &'a Event> + Clone,
 ) -> Vec<Effect> {
     let start = Time::log_start(log);
     let guids: HashMap<_, _> = events
         .clone()
-        .filter_map(|event| event.effect_guid())
+        .filter_map(|event| event.try_extract::<evtc::effect::EffectGUID>())
         .map(|event| {
             (
                 event.effect_id,
@@ -58,7 +58,7 @@ pub fn extract_effects<'a>(
 
     events
         .filter_map(|event| {
-            event.effect().map(|effect| {
+            event.try_extract::<evtc::effect::Effect>().map(|effect| {
                 let info = guids.get(&effect.effect_id).cloned();
                 Effect {
                     time: start.relative(event.time),
