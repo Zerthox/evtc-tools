@@ -29,6 +29,7 @@ fn main() {
         Command::All => {
             #[derive(Debug, Clone, Serialize, Deserialize)]
             struct Event {
+                #[serde(skip_serializing_if = "Option::is_none")]
                 time_since_start: Option<i32>,
                 #[serde(flatten)]
                 event: EventKind,
