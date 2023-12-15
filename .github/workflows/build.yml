@@ -1,21 +1,40 @@
-on: [workflow_dispatch]
-
 name: Build
 
+on:
+  workflow_dispatch:
+  release:
+    types: [released]
+
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}-latest
+  release:
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu, windows, macos]
+        include:
+          - name: linux
+            os: ubuntu-latest
+          - name: windows
+            os: windows-latest
+          - name: macos
+            os: macos-latest
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release
       - uses: actions/upload-artifact@v3
         with:
-            name: evtc_tools_${{ matrix.os }}
+            name: evtc_tools_${{ matrix.name }}
             path: |
                 target/release/evtc_tools
                 target/release/evtc_tools.exe
+      - uses: vimtor/action-zip@v1.1
+        with:
+          files: |
+            target/release/evtc_tools
+            target/release/evtc_tools.exe
+          dest: evtc_tools_${{ matrix.name }}.zip
+      - uses: softprops/action-gh-release@v1
+        continue-on-error: true
+        with:
+          files: evtc_tools_${{ matrix.name }}.zip
