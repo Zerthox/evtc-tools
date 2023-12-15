@@ -30,9 +30,7 @@ jobs:
                 target/release/evtc_tools.exe
       - uses: vimtor/action-zip@v1.1
         with:
-          files: |
-            target/release/evtc_tools
-            target/release/evtc_tools.exe
+          files: target/release/evtc_tools target/release/evtc_tools.exe
           dest: evtc_tools_${{ matrix.name }}.zip
       - uses: softprops/action-gh-release@v1
         continue-on-error: true
