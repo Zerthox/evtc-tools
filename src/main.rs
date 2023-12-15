@@ -47,13 +47,13 @@ fn main() {
             args.write_output(&events);
         }
 
-        Command::Agent => {
+        Command::Agents => {
             let agents = &log.agents;
             println!("Found {} agents", agents.len());
             args.write_output(agents);
         }
 
-        Command::Skill { skill } => {
+        Command::Skills { skill } => {
             let skill = skill.as_ref().map(|arg| find_skill(&log, arg));
             match skill {
                 Some(skill) => println!("Finding skill data for \"{}\" ({})", skill.name, skill.id),
@@ -66,7 +66,7 @@ fn main() {
             args.write_output(&skills);
         }
 
-        Command::Cast { skill } => {
+        Command::Casts { skill } => {
             let skill = skill.as_ref().map(|arg| find_skill(&log, arg));
             match skill {
                 Some(skill) => println!("Finding casts of skill \"{}\" ({})", skill.name, skill.id),
@@ -83,7 +83,7 @@ fn main() {
             args.write_output(&data);
         }
 
-        Command::Position => {
+        Command::Positions => {
             println!("Finding positions");
 
             let positions = extract_positions(&log, events);
@@ -95,7 +95,7 @@ fn main() {
             args.write_output(&positions);
         }
 
-        Command::Effect => {
+        Command::Effects => {
             println!("Finding effects");
 
             let effects = extract_effects(&log, events);

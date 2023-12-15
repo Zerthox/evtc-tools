@@ -122,7 +122,7 @@ impl Args {
     }
 }
 
-// TODO: filter all by name not just first id
+// TODO: filter all by name, not just pick first matching id
 #[derive(Debug, Default, Clone)]
 enum AgentFilter {
     #[default]
@@ -185,27 +185,27 @@ pub enum Command {
     All,
 
     /// Extract agents.
-    Agent,
+    Agents,
 
     /// Extract skill/buff information.
-    Skill {
+    Skills {
         /// Id or name of skill to extract data for.
         #[clap(long)]
         skill: Option<String>,
     },
 
     /// Extract cast & hit data.
-    Cast {
+    Casts {
         /// Id or name of skill to extract data for.
         #[clap(long)]
         skill: Option<String>,
     },
 
     /// Extract position data.
-    Position,
+    Positions,
 
-    ///Extract visual effect data.
-    Effect,
+    /// Extract visual effect data.
+    Effects,
 
     /// Map direct damage hits to weapon sets.
     Hitmap,
@@ -218,11 +218,11 @@ impl Command {
     pub fn suffix(&self) -> Option<&'static str> {
         match self {
             Command::All => None,
-            Command::Agent => Some("agents"),
-            Command::Skill { .. } => Some("skills"),
-            Command::Cast { .. } => Some("casts"),
-            Command::Position => Some("positions"),
-            Command::Effect => Some("effects"),
+            Command::Agents => Some("agents"),
+            Command::Skills { .. } => Some("skills"),
+            Command::Casts { .. } => Some("casts"),
+            Command::Positions => Some("positions"),
+            Command::Effects => Some("effects"),
             Command::Hitmap => Some("hitmap"),
             Command::Gear => Some("gear"),
         }
