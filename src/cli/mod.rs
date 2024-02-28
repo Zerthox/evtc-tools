@@ -1,3 +1,9 @@
+mod command;
+mod filter;
+
+pub use command::*;
+pub use filter::*;
+
 use clap::Parser;
 use evtc_parse::{parse_file, Agent, Event, Log};
 use evtc_tools::Time;
@@ -119,112 +125,5 @@ impl Args {
         let output = BufWriter::new(File::create(&out).expect("failed to create output file"));
         serde_json::to_writer_pretty(output, value).expect("failed to serialize data");
         println!("Saved data to \"{}\"", out.display());
-    }
-}
-
-// TODO: filter all by name, not just pick first matching id
-#[derive(Debug, Default, Clone)]
-enum AgentFilter {
-    #[default]
-    None,
-    ArcId(u64),
-    InstId(u16),
-}
-
-impl AgentFilter {
-    fn parse(log: &Log, value: &str) -> Self {
-        if let Some(string) = value.strip_prefix("inst:") {
-            let id = string.parse().expect("invalid instance id");
-            Self::InstId(id)
-        } else {
-            match value.parse::<u64>() {
-                Ok(id) => Self::ArcId(id),
-                Err(_) => log
-                    .agents
-                    .iter()
-                    .find(|agent| agent.name[0] == value)
-                    .map(|agent| Self::ArcId(agent.id))
-                    .unwrap_or_else(|| panic!("failed to find agent \"{}\"", value)),
-            }
-        }
-    }
-
-    fn agent<'a>(&self, log: &'a Log) -> Option<&'a Agent> {
-        match *self {
-            Self::None => None,
-            Self::ArcId(id) => log.agent(id),
-            Self::InstId(id) => log
-                .events
-                .iter()
-                .find(|event| event.src_instance_id == id)
-                .and_then(|event| log.agent(event.src_agent)),
-        }
-    }
-
-    fn filter_src(&self, event: &Event) -> bool {
-        match *self {
-            Self::None => true,
-            Self::ArcId(id) => event.src_agent == id,
-            Self::InstId(id) => event.src_instance_id == id,
-        }
-    }
-
-    fn filter_dst(&self, event: &Event) -> bool {
-        match *self {
-            Self::None => true,
-            Self::ArcId(id) => event.dst_agent == id,
-            Self::InstId(id) => event.dst_instance_id == id,
-        }
-    }
-}
-
-/// CLI command.
-#[derive(Debug, Clone, clap::Subcommand)]
-pub enum Command {
-    /// Extract all events.
-    All,
-
-    /// Extract agents.
-    Agents,
-
-    /// Extract skill/buff information.
-    Skills {
-        /// Id or name of skill to extract data for.
-        #[clap(long)]
-        skill: Option<String>,
-    },
-
-    /// Extract cast & hit data.
-    Casts {
-        /// Id or name of skill to extract data for.
-        #[clap(long)]
-        skill: Option<String>,
-    },
-
-    /// Extract position data.
-    Positions,
-
-    /// Extract visual effect data.
-    Effects,
-
-    /// Map direct damage hits to weapon sets.
-    Hitmap,
-
-    /// Check gear on the recording player.
-    Gear,
-}
-
-impl Command {
-    pub fn suffix(&self) -> Option<&'static str> {
-        match self {
-            Command::All => None,
-            Command::Agents => Some("agents"),
-            Command::Skills { .. } => Some("skills"),
-            Command::Casts { .. } => Some("casts"),
-            Command::Positions => Some("positions"),
-            Command::Effects => Some("effects"),
-            Command::Hitmap => Some("hitmap"),
-            Command::Gear => Some("gear"),
-        }
     }
 }
