@@ -4,6 +4,7 @@ mod relic;
 mod rune;
 mod sigil;
 
+#[allow(unused_imports)]
 pub use self::infusion::*;
 pub use self::item::*;
 pub use self::relic::*;

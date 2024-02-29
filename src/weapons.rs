@@ -16,13 +16,11 @@ impl WeaponMap {
                     event.src_agent == agent && event.get_statechange() == StateChange::WeaponSwap
                 })
                 .filter_map(|event| {
-                    evtc::weapon::WeaponSet::try_from(event.dst_agent)
-                        .ok()
-                        .and_then(|set| WeaponSet::try_from(set).ok())
-                        .map(|set| Swap {
-                            time: event.time,
-                            set,
-                        })
+                    let set = evtc::weapon::WeaponSet::from(event.dst_agent);
+                    WeaponSet::try_from(set).ok().map(|set| Swap {
+                        time: event.time,
+                        set,
+                    })
                 })
                 .collect(),
         }
