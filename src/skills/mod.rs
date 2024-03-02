@@ -1,17 +1,19 @@
-use evtc_parse::{
-    buff::{BuffFormula, BuffInfo},
-    skill::{SkillInfo, SkillTiming},
-    Log,
-};
+use evtc_parse::{event as evtc, Log};
 use serde::{Deserialize, Serialize};
 
+mod buff;
+mod skill;
+
+pub use buff::*;
+pub use skill::*;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Skill {
+pub struct SkillIdName {
     pub id: u32,
     pub name: Option<String>,
 }
 
-impl Skill {
+impl SkillIdName {
     pub fn from_log(log: &Log, id: u32) -> Self {
         Self {
             id,
@@ -23,7 +25,7 @@ impl Skill {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SkillWithInfo {
     #[serde(flatten)]
-    pub skill: Skill,
+    pub skill: SkillIdName,
 
     #[serde(flatten)]
     pub kind: Option<SkillKind>,
@@ -32,16 +34,8 @@ pub struct SkillWithInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum SkillKind {
-    Skill {
-        #[serde(flatten)]
-        info: SkillInfo,
-        timings: Vec<SkillTiming>,
-    },
-    Buff {
-        #[serde(flatten)]
-        info: BuffInfo,
-        formulas: Vec<BuffFormula>,
-    },
+    Skill(SkillInfo),
+    Buff(BuffInfo),
 }
 
 pub fn extract_skills(log: &Log, id: Option<u32>) -> Vec<SkillWithInfo> {
@@ -58,30 +52,28 @@ pub fn extract_skills(log: &Log, id: Option<u32>) -> Vec<SkillWithInfo> {
 
             let kind = if let Some(info) = iter
                 .clone()
-                .find_map(|event| event.try_extract::<SkillInfo>())
+                .find_map(|event| event.try_extract::<evtc::SkillInfo>())
             {
                 let timings = iter
                     .clone()
-                    .filter_map(|event| event.try_extract::<SkillTiming>())
-                    .collect();
+                    .filter_map(|event| event.try_extract::<evtc::SkillTiming>());
 
-                Some(SkillKind::Skill { info, timings })
+                Some(SkillKind::Skill(SkillInfo::new(info, timings)))
             } else if let Some(info) = iter
                 .clone()
-                .find_map(|event| event.try_extract::<BuffInfo>())
+                .find_map(|event| event.try_extract::<evtc::BuffInfo>())
             {
                 let formulas = iter
                     .clone()
-                    .filter_map(|event| event.try_extract::<BuffFormula>())
-                    .collect();
+                    .filter_map(|event| event.try_extract::<evtc::BuffFormula>());
 
-                Some(SkillKind::Buff { info, formulas })
+                Some(SkillKind::Buff(BuffInfo::new(info, formulas)))
             } else {
                 None
             };
 
             SkillWithInfo {
-                skill: Skill {
+                skill: SkillIdName {
                     id,
                     name: Some(name),
                 },

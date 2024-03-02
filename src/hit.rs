@@ -1,4 +1,4 @@
-use crate::{Agent, Skill};
+use crate::{Agent, SkillIdName};
 use evtc_parse::{strike::StrikeEvent, Log, Strike};
 use serde::{Deserialize, Serialize};
 
@@ -25,5 +25,5 @@ impl Hit {
 pub struct HitWithSkill {
     #[serde(flatten)]
     pub hit: Hit,
-    pub skill: Skill,
+    pub skill: SkillIdName,
 }

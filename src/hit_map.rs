@@ -1,4 +1,4 @@
-use crate::{Hit, HitWithSkill, Skill, Time, WeaponMap, WeaponSet};
+use crate::{Hit, HitWithSkill, SkillIdName, Time, WeaponMap, WeaponSet};
 use evtc_parse::{Event, Log};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -36,7 +36,7 @@ pub fn map_hits_to_set<'a>(
         if let Some(event) = event.try_to_strike() {
             if event.strike.dealt_damage() {
                 let new = HitWithSkill {
-                    skill: Skill::from_log(log, event.skill_id),
+                    skill: SkillIdName::from_log(log, event.skill_id),
                     hit: Hit::from_strike(log, &event, start.relative(event.time)),
                 };
 

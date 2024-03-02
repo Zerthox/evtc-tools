@@ -1,4 +1,4 @@
-use crate::{util::to_tick_rounded, Agent, Hit, Skill, Time};
+use crate::{util::to_tick_rounded, Agent, Hit, SkillIdName, Time};
 use evtc_parse::{Activation, Event, EventKind, Log};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ pub struct Casts {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cast {
     pub time: i32,
-    pub skill: Skill,
+    pub skill: SkillIdName,
     pub agent: Agent,
     pub kind: Option<Activation>,
     pub duration: Option<i32>,
@@ -20,7 +20,7 @@ pub struct Cast {
 }
 
 impl Cast {
-    pub fn new(skill: Skill, agent: Agent, time: i32) -> Self {
+    pub fn new(skill: SkillIdName, agent: Agent, time: i32) -> Self {
         Self {
             time,
             skill,
@@ -50,7 +50,7 @@ pub struct CastHit {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StandaloneHit {
-    pub skill: Skill,
+    pub skill: SkillIdName,
     pub agent: Agent,
 
     #[serde(flatten)]
@@ -69,7 +69,7 @@ pub fn extract_casts<'a>(
     for event in events {
         let skill_id = event.skill_id;
         if skill.map(|skill| skill_id == skill).unwrap_or(true) {
-            let skill = Skill::from_log(log, skill_id);
+            let skill = SkillIdName::from_log(log, skill_id);
             let time = start.relative(event.time);
 
             match event.clone().into_kind() {
