@@ -3,12 +3,9 @@ mod item;
 mod relic;
 mod rune;
 mod sigil;
+mod trinket;
 
-pub use self::infusion::*;
-pub use self::item::*;
-pub use self::relic::*;
-pub use self::rune::*;
-pub use self::sigil::*;
+pub use self::{infusion::*, item::*, relic::*, rune::*, sigil::*, trinket::*};
 
 use crate::{Time, WeaponMap, WeaponSet};
 use evtc_parse::buff::BuffInitialEvent;
