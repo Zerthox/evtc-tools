@@ -4,7 +4,6 @@ mod relic;
 mod rune;
 mod sigil;
 
-#[allow(unused_imports)]
 pub use self::infusion::*;
 pub use self::item::*;
 pub use self::relic::*;
@@ -12,10 +11,10 @@ pub use self::rune::*;
 pub use self::sigil::*;
 
 use crate::{Time, WeaponMap, WeaponSet};
+use evtc_parse::buff::BuffInitialEvent;
 use evtc_parse::event::BuffApplyEvent;
-use evtc_parse::event::BuffInfo;
 use evtc_parse::{
-    buff::{BuffCategory, BuffCategoryOld},
+    buff::{BuffCategory, BuffCategoryOld, BuffInfo},
     Log, Profession, Specialization, StateChange,
 };
 use serde::{Deserialize, Serialize};
@@ -32,6 +31,7 @@ pub struct GearInfo {
     pub runes: HashSet<GearItem<Rune>>,
     pub relics: HashSet<GearItem<Relic>>,
     pub sigils: GearItemMap<Sigil>,
+    pub infusions: Vec<GearItem<Infusion>>,
     pub other: Vec<GearBuff>,
 }
 
@@ -71,25 +71,32 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         .filter(|(_, info)| info.category == gear_category)
         .collect();
 
-    let buff_applies: Vec<_> = log
+    let buff_initials = log
+        .events
+        .iter()
+        .filter_map(|event| event.try_extract::<BuffInitialEvent>())
+        .map(|event| GearBuff {
+            id: event.skill_id,
+            time: start.relative(event.time),
+            log_name: log.skill_name(event.skill_id).unwrap_or_default().into(),
+        });
+
+    let buff_applies = log
         .events
         .iter()
         .filter_map(|event| event.try_extract::<BuffApplyEvent>())
-        .map(|event| {
-            let id = event.skill_id;
-            GearBuff {
-                id,
-                time: start.relative(event.time),
-                log_name: log.skill_name(id).unwrap_or_default().into(),
-            }
-        })
-        .collect();
+        .map(|event| GearBuff {
+            id: event.skill_id,
+            time: start.relative(event.time),
+            log_name: log.skill_name(event.skill_id).unwrap_or_default().into(),
+        });
 
     let mut runes = HashSet::new();
     let mut relics = HashSet::new();
     let mut sigils = GearItemMap::new();
+    let mut infusions = Vec::new();
     let mut other = Vec::new();
-    for buff in buff_applies.into_iter() {
+    for buff in buff_initials.chain(buff_applies) {
         let id = buff.id;
         if let Ok(rune) = Rune::try_from(id) {
             runes.insert(GearItem::new(buff, rune));
@@ -103,6 +110,8 @@ pub fn extract_gear(log: &Log) -> GearInfo {
                 .entry(set)
                 .or_default()
                 .insert(GearItem::new(buff, sigil));
+        } else if let Ok(infusion) = Infusion::try_from(id) {
+            infusions.push(GearItem::new(buff, infusion));
         } else if gear_infos.contains_key(&buff.id) {
             other.push(buff);
         }
@@ -121,6 +130,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         runes,
         relics,
         sigils,
+        infusions,
         other,
     }
 }
