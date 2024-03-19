@@ -2,6 +2,8 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
 
 /// Buff granted by an Infusion.
+///
+/// Missing most cosmetic infusions.
 #[derive(
     Debug,
     Clone,
@@ -17,7 +19,7 @@ use serde::{Deserialize, Serialize};
     TryFromPrimitive,
 )]
 #[repr(u32)]
-enum Infusion {
+pub enum Infusion {
     #[serde(rename = "+1 Agony Infusion")]
     Agony1 = 22100,
 
@@ -107,4 +109,79 @@ enum Infusion {
 
     #[serde(rename = "+30 Agony Infusion")]
     Agony30 = 22129,
+
+    #[serde(rename = "Healing +5 Agony Infusion")]
+    Healing5 = 15738,
+
+    #[serde(rename = "Malign +5 Agony Infusion")]
+    Malign5 = 15737,
+
+    #[serde(rename = "Mighty +5 Agony Infusion")]
+    Mighty5 = 15735,
+
+    #[serde(rename = "Mystical +5 Agony Infusion")]
+    Mystical5 = 47878,
+
+    #[serde(rename = "Precise +5 Agony Infusion")]
+    Precise5 = 15736,
+
+    #[serde(rename = "Resilient +5 Agony Infusion")]
+    Resilient5 = 15748,
+
+    #[serde(rename = "Spiteful +5 Agony Infusion")]
+    Spiteful5 = 48782,
+
+    #[serde(rename = "Vital +5 Agony Infusion")]
+    Vital5 = 15747,
+
+    #[serde(rename = "Healing +7 Agony Infusion")]
+    Healing7 = 17064,
+
+    #[serde(rename = "Malign +7 Agony Infusion")]
+    Malign7 = 17063,
+
+    #[serde(rename = "Mighty +7 Agony Infusion")]
+    Mighty7 = 17065,
+
+    #[serde(rename = "Mystical +7 Agony Infusion")]
+    Mystical7 = 47436,
+
+    #[serde(rename = "Precise +7 Agony Infusion")]
+    Precise7 = 17066,
+
+    #[serde(rename = "Resilient +7 Agony Infusion")]
+    Resilient7 = 17067,
+
+    #[serde(rename = "Spiteful +7 Agony Infusion")]
+    Spiteful7 = 48364,
+
+    #[serde(rename = "Vital +7 Agony Infusion")]
+    Vital7 = 17068,
+
+    #[serde(rename = "Healing +9 Agony Infusion")]
+    Healing9 = 26287,
+
+    #[serde(rename = "Malign +9 Agony Infusion")]
+    Malign9 = 26290,
+
+    #[serde(rename = "Mighty +9 Agony Infusion")]
+    Mighty9 = 26291,
+
+    #[serde(rename = "Mystical +9 Agony Infusion")]
+    Mystical9 = 47514,
+
+    #[serde(rename = "Precise +9 Agony Infusion")]
+    Precise9 = 26289,
+
+    #[serde(rename = "Resilient +9 Agony Infusion")]
+    Resilient9 = 26286,
+
+    #[serde(rename = "Spiteful +9 Agony Infusion")]
+    Spiteful9 = 47422,
+
+    #[serde(rename = "Vital +9 Agony Infusion")]
+    Vital9 = 26288,
+
+    #[serde(rename = "Mighty Arcane Flow Infusion")]
+    MightyArcaneFlow = 71492,
 }
