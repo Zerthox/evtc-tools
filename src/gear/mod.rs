@@ -75,6 +75,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         .events
         .iter()
         .filter_map(|event| event.try_extract::<BuffInitialEvent>())
+        .filter(|event| event.dst.id == agent.id)
         .map(|event| GearBuff {
             id: event.skill_id,
             time: start.relative(event.time),
@@ -85,6 +86,7 @@ pub fn extract_gear(log: &Log) -> GearInfo {
         .events
         .iter()
         .filter_map(|event| event.try_extract::<BuffApplyEvent>())
+        .filter(|event| event.dst.id == agent.id)
         .map(|event| GearBuff {
             id: event.skill_id,
             time: start.relative(event.time),
