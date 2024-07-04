@@ -17,7 +17,7 @@ impl Time {
         let time = log
             .events
             .iter()
-            .find(|event| event.get_statechange() == StateChange::LogStart)
+            .find(|event| event.get_statechange() == StateChange::SquadCombatStart)
             .map(|event| event.time)
             .expect("no log start event");
         Self::new(time)

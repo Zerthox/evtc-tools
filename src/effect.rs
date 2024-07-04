@@ -1,6 +1,7 @@
 use crate::{Agent, Time};
 use evtc_parse::{
-    effect::{ContentLocal, Effect as RawEffect, EffectGUID, EffectLocation},
+    effect::{Effect as RawEffect, EffectLocation},
+    guid::{ContentGUID, ContentLocal},
     Event, Log, Position,
 };
 use serde::{Deserialize, Serialize};
@@ -26,8 +27,8 @@ pub struct EffectInfo {
     pub content_local: Option<ContentLocal>,
 }
 
-impl From<EffectGUID> for EffectInfo {
-    fn from(event: EffectGUID) -> Self {
+impl From<ContentGUID> for EffectInfo {
+    fn from(event: ContentGUID) -> Self {
         Self {
             guid: event.guid_string(),
             content_local: event.content_local,
@@ -42,8 +43,8 @@ pub fn extract_effects<'a>(
     let start = Time::log_start(log);
     let guids: HashMap<_, _> = events
         .clone()
-        .filter_map(|event| event.try_extract::<EffectGUID>())
-        .map(|event| (event.effect_id, event.into()))
+        .filter_map(|event| event.try_extract::<ContentGUID>())
+        .map(|event| (event.content_id, event.into()))
         .collect();
 
     events
