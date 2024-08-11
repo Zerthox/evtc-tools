@@ -1,6 +1,6 @@
 use crate::{Agent, Time};
 use evtc_parse::{
-    effect::{Effect as RawEffect, EffectLocation},
+    effect::{Effect as RawEffect, EffectLocation as RawLocation},
     guid::{ContentGUID, ContentLocal},
     Event, Log, Position,
 };
@@ -36,6 +36,12 @@ impl From<ContentGUID> for EffectInfo {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum EffectLocation {
+    Agent(Agent),
+    Position(Position),
+}
+
 pub fn extract_effects<'a>(
     log: &'a Log,
     events: impl Iterator<Item = &'a Event> + Clone,
@@ -61,7 +67,10 @@ pub fn extract_effects<'a>(
                     None
                 },
                 moving_platform: effect.moving_platform,
-                location: effect.location,
+                location: match effect.location {
+                    RawLocation::Agent(id) => EffectLocation::Agent(Agent::from_log(id, log)),
+                    RawLocation::Position(pos) => EffectLocation::Position(pos),
+                },
                 duration: effect.duration,
                 tracking_id: effect.tracking_id,
                 orientation: effect.orientation.into(),
