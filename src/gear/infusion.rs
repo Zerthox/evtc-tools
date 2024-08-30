@@ -184,4 +184,7 @@ pub enum Infusion {
 
     #[serde(rename = "Mighty Arcane Flow Infusion")]
     MightyArcaneFlow = 71492,
+
+    #[serde(rename = "Heat Core Infusion")]
+    HeatCore = 74433,
 }
