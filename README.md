@@ -36,4 +36,7 @@ evtc_tools positions log.zevtc --agent 2000
 
 # extract (visual) effect data
 evtc_tools effects log.zevtc
+
+# extract missile (projectile) data
+evtc_tools missiles log.zevtc
 ```
