@@ -33,6 +33,11 @@ impl Time {
         }
     }
 
+    /// Converts the absolute time into relative time.
+    pub fn relative_saturate(&self, absolute: u64) -> u64 {
+        absolute.saturating_sub(self.absolute)
+    }
+
     /// Converts the relative time into absolute time.
     pub fn absolute(&self, relative: i32) -> u64 {
         if let Ok(relative) = u64::try_from(relative) {

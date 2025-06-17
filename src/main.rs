@@ -2,7 +2,7 @@ use clap::{error::ErrorKind, CommandFactory, Parser};
 use evtc_parse::{EventKind, Log, Skill};
 use evtc_tools::{
     extract_casts, extract_effects, extract_gear, extract_positions, extract_skills,
-    hit_map::map_hits_to_set, Time,
+    hit_map::map_hits_to_set, missile::extract_missiles, Time,
 };
 use serde::{Deserialize, Serialize};
 
@@ -34,8 +34,8 @@ fn main() {
                 #[serde(flatten)]
                 event: EventKind,
             }
-            let start = Time::log_start(&log);
 
+            let start = Time::log_start(&log);
             let events: Vec<Event> = events
                 .cloned()
                 .map(|event| Event {
@@ -102,6 +102,15 @@ fn main() {
             println!("Found {} effects", effects.len());
 
             args.write_output(&effects);
+        }
+
+        Command::Missiles => {
+            println!("Finding missiles");
+
+            let missiles = extract_missiles(&log, events);
+            println!("Found {} missiles", missiles.len());
+
+            args.write_output(&missiles);
         }
 
         Command::Hitmap => {

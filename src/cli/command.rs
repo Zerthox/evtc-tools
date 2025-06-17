@@ -27,6 +27,9 @@ pub enum Command {
     /// Extract visual effect data.
     Effects,
 
+    /// Extract missile (projectile) data.
+    Missiles,
+
     /// Map direct damage hits to weapon sets.
     Hitmap,
 
@@ -43,6 +46,7 @@ impl Command {
             Command::Casts { .. } => Some("casts"),
             Command::Positions => Some("positions"),
             Command::Effects => Some("effects"),
+            Command::Missiles => Some("missiles"),
             Command::Hitmap => Some("hitmap"),
             Command::Gear => Some("gear"),
         }
