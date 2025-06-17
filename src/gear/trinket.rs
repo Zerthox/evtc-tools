@@ -27,8 +27,8 @@ pub enum Trinket {
     /// Used by Ascended Ring.
     ///
     /// Has +5 Agony Resistance in the tooltip, but does not grant it.
-    #[serde(rename = "Berserker's Trinket")]
-    BerserkersAlt = 15755,
+    #[serde(rename = "Berserker's Ring")]
+    BerserkersRing = 15755,
 
     #[serde(rename = "Assassin's Trinket")]
     Assassins = 32045,
