@@ -18,11 +18,26 @@ use serde::{Deserialize, Serialize};
 )]
 #[repr(u32)]
 pub enum Relic {
+    #[serde(rename = "Relic of Agony")]
+    Agony = 76234,
+
     #[serde(rename = "Relic of Akeem")]
     Akeem = 70452,
 
+    #[serde(rename = "Relic of Altruism")]
+    Altruism = 75614,
+
     #[serde(rename = "Relic of Antitoxin")]
     Antitoxin = 70735,
+
+    #[serde(rename = "Relic of Atrocity")]
+    Atrocity = 74275,
+
+    #[serde(rename = "Relic of Bava Nisos")]
+    BavaNisos = 76187,
+
+    #[serde(rename = "Relic of Bloodstone")]
+    Bloodstone = 76336,
 
     #[serde(rename = "Relic of Cerus")]
     Cerus = 70615,
@@ -42,8 +57,14 @@ pub enum Relic {
     #[serde(rename = "Relic of Febe")]
     Febe = 71640,
 
+    #[serde(rename = "Relic of Fire")]
+    Fire = 75978,
+
     #[serde(rename = "Relic of Fireworks")]
     Fireworks = 71259,
+
+    #[serde(rename = "Relic of Geysers")]
+    Geysers = 74959,
 
     #[serde(rename = "Relic of Isgarren")]
     Isgarren = 69740,
@@ -63,6 +84,15 @@ pub enum Relic {
     #[serde(rename = "Relic of Mercy")]
     Mercy = 69559,
 
+    #[serde(rename = "Relic of Mistburn")]
+    Mistburn = 76254,
+
+    #[serde(rename = "Relic of Mosyn")]
+    Mosyn = 72845,
+
+    #[serde(rename = "Relic of Mount Balrior")]
+    MountBalrior = 75186,
+
     #[serde(rename = "Relic of Nayos")]
     Nayos = 71382,
 
@@ -75,8 +105,20 @@ pub enum Relic {
     #[serde(rename = "Relic of Resistance")]
     Resistance = 70688,
 
+    #[serde(rename = "Relic of Reunification")]
+    Reunification = 75303,
+
+    #[serde(rename = "Relic of Rivers")]
+    Rivers = 73660,
+
+    #[serde(rename = "Relic of Sorrow")]
+    Sorrow = 73689,
+
     #[serde(rename = "Relic of Speed")]
     Speed = 70126,
+
+    #[serde(rename = "Relic of Surging")]
+    Surging = 75940,
 
     #[serde(rename = "Relic of the Adventurer")]
     Adventurer = 70628,
@@ -89,6 +131,12 @@ pub enum Relic {
 
     #[serde(rename = "Relic of the Astral Ward")]
     AstralWard = 70448,
+
+    #[serde(rename = "Relic of the Beehive")]
+    Beehive = 74880,
+
+    #[serde(rename = "Relic of the Blightbringer")]
+    Blightbringer = 74494,
 
     #[serde(rename = "Relic of the Brawler")]
     Brawler = 69971,
@@ -105,6 +153,9 @@ pub enum Relic {
     #[serde(rename = "Relic of the Citadel")]
     Citadel = 70388,
 
+    #[serde(rename = "Relic of the Claw")]
+    Claw = 74181,
+
     #[serde(rename = "Relic of the Daredevil")]
     Daredevil = 70744,
 
@@ -120,17 +171,32 @@ pub enum Relic {
     #[serde(rename = "Relic of the Dragonhunter")]
     Dragonhunter = 70680,
 
+    #[serde(rename = "Relic of the Eagle")]
+    Eagle = 75656,
+
+    #[serde(rename = "Relic of the Earth")]
+    Earth = 76028,
+
     #[serde(rename = "Relic of the Firebrand")]
     Firebrand = 70599,
 
     #[serde(rename = "Relic of the Flock")]
     Flock = 70992,
 
+    #[serde(rename = "Relic of the Founding")]
+    Founding = 72548,
+
     #[serde(rename = "Relic of the Fractal")]
     Fractal = 70047,
 
+    #[serde(rename = "Relic of the Golemancer")]
+    Golemancer = 75474,
+
     #[serde(rename = "Relic of the Herald")]
     Herald = 69898,
+
+    #[serde(rename = "Relic of the Holosmith")]
+    Holosmith = 75584,
 
     #[serde(rename = "Relic of the Ice")]
     Ice = 70989,
@@ -138,11 +204,20 @@ pub enum Relic {
     #[serde(rename = "Relic of the Krait")]
     Krait = 69772,
 
+    #[serde(rename = "Relic of the Lich")]
+    Lich = 75975,
+
+    #[serde(rename = "Relic of the Living City")]
+    LivingCity = 76284,
+
     #[serde(rename = "Relic of the Midnight King")]
     MidnightKing = 71384,
 
     #[serde(rename = "Relic of the Mirage")]
     Mirage = 70216,
+
+    #[serde(rename = "Relic of the Mists Tide")]
+    MistsTide = 75356,
 
     #[serde(rename = "Relic of the Monk")]
     Monk = 69912,
@@ -153,14 +228,32 @@ pub enum Relic {
     #[serde(rename = "Relic of the Nightmare")]
     Nightmare = 69720,
 
+    #[serde(rename = "Relic of the Ogre")]
+    Ogre = 75992,
+
     #[serde(rename = "Relic of the Pack")]
     Pack = 70438,
+
+    #[serde(rename = "Relic of the Phenom")]
+    Phenom = 76433,
+
+    #[serde(rename = "Relic of the Privateer")]
+    Privateer = 75724,
 
     #[serde(rename = "Relic of the Reaper")]
     Reaper = 71287,
 
     #[serde(rename = "Relic of the Scourge")]
     Scourge = 70532,
+
+    #[serde(rename = "Relic of the Sorcerer")]
+    Sorcerer = 72447,
+
+    #[serde(rename = "Relic of the Steamshrieker")]
+    Steamshrieker = 75053,
+
+    #[serde(rename = "Relic of the Stormsinger")]
+    Stormsinger = 74029,
 
     #[serde(rename = "Relic of the Sunless")]
     Sunless = 71058,
@@ -171,6 +264,9 @@ pub enum Relic {
     #[serde(rename = "Relic of the Trooper")]
     Trooper = 70224,
 
+    #[serde(rename = "Relic of the Twin Generals")]
+    TwinGenerals = 72475,
+
     #[serde(rename = "Relic of the Unseen Invasion")]
     UnseenInvasion = 70596,
 
@@ -179,6 +275,9 @@ pub enum Relic {
 
     #[serde(rename = "Relic of the Water")]
     Water = 70295,
+
+    #[serde(rename = "Relic of the Wayfinder")]
+    Wayfinder = 72768,
 
     #[serde(rename = "Relic of the Weaver")]
     Weaver = 71004,
@@ -189,6 +288,15 @@ pub enum Relic {
     #[serde(rename = "Relic of the Zephyrite")]
     Zephyrite = 71014,
 
+    #[serde(rename = "Relic of Thorns")]
+    Thorns = 75453,
+
+    #[serde(rename = "Relic of Vampirism")]
+    Vampirism = 75846,
+
     #[serde(rename = "Relic of Vass")]
     Vass = 70697,
+
+    #[serde(rename = "Relic of Zakiros")]
+    Zakiros = 72510,
 }

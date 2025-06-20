@@ -24,17 +24,11 @@ pub enum Sigil {
     #[serde(rename = "Sigil of Accuracy")]
     Accuracy = 9325,
 
-    #[serde(rename = "Sigil of Accuracy (Stats)")]
-    AccuracyStats = 24151,
-
     #[serde(rename = "Sigil of Agility")]
     Agility = 33690,
 
     #[serde(rename = "Sigil of Agony")]
     Agony = 9313,
-
-    #[serde(rename = "Sigil of Agony (Stats)")]
-    AgonyStats = 24158,
 
     #[serde(rename = "Sigil of Air")]
     Air = 9448,
@@ -68,9 +62,6 @@ pub enum Sigil {
 
     #[serde(rename = "Sigil of Chilling")]
     Chilling = 9315,
-
-    #[serde(rename = "Sigil of Chilling (Stats)")]
-    ChillingStats = 24174,
 
     #[serde(rename = "Sigil of Cleansing")]
     Cleansing = 25519,
@@ -120,9 +111,6 @@ pub enum Sigil {
     #[serde(rename = "Sigil of Force")]
     Force = 9322,
 
-    #[serde(rename = "Sigil of Force (Stats)")]
-    ForceStats = 24148,
-
     #[serde(rename = "Sigil of Frailty")]
     Frailty = 9456,
 
@@ -143,9 +131,6 @@ pub enum Sigil {
 
     #[serde(rename = "Sigil of Hobbling")]
     Hobbling = 9316,
-
-    #[serde(rename = "Sigil of Hobbling (Stats)")]
-    HobblingStats = 24164,
 
     #[serde(rename = "Sigil of Hologram Slaying")]
     HologramSlaying = 56840,
@@ -207,9 +192,6 @@ pub enum Sigil {
     #[serde(rename = "Sigil of Peril")]
     Peril = 9318,
 
-    #[serde(rename = "Sigil of Peril (Stats)")]
-    PerilStats = 24167,
-
     #[serde(rename = "Sigil of Purity")]
     Purity = 9289,
 
@@ -237,8 +219,8 @@ pub enum Sigil {
     #[serde(rename = "Sigil of Smoldering")]
     Smoldering = 9314,
 
-    #[serde(rename = "Sigil of Smoldering (Stats)")]
-    SmolderingStats = 24168,
+    #[serde(rename = "Sigil of Smothering")]
+    Smothering = 9362,
 
     #[serde(rename = "Sigil of Sorrow")]
     Sorrow = 9373,
@@ -269,9 +251,6 @@ pub enum Sigil {
 
     #[serde(rename = "Sigil of Venom")]
     Venom = 9317,
-
-    #[serde(rename = "Sigil of Venom (Stats)")]
-    VenomStats = 24157,
 
     #[serde(rename = "Sigil of Vision")]
     Vision = 53276,
