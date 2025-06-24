@@ -85,7 +85,7 @@ impl Args {
 
     pub fn filter_log<'a>(&self, log: &'a Log) -> impl Iterator<Item = &'a Event> + Clone {
         let src = Self::create_filter(log, &self.agent, "source");
-        let dst = Self::create_filter(log, &self.target, "dest");
+        let dst = Self::create_filter(log, &self.target, "target");
         let start = Time::log_start(log).absolute;
         let range =
             start + self.start.unwrap_or(0)..=self.end.map(|end| start + end).unwrap_or(u64::MAX);
