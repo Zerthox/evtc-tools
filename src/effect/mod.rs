@@ -33,8 +33,9 @@ pub fn extract_effects<'a>(
     events: impl Iterator<Item = &'a Event> + Clone,
 ) -> Vec<Effect> {
     let start = Time::log_start(log);
-    let guids: HashMap<u32, EffectInfo> = events
-        .clone()
+    let guids: HashMap<u32, EffectInfo> = log
+        .events
+        .iter()
         .filter_map(|event| EffectInfo::new(event.try_extract::<ContentInfo>()?))
         .map(|info| (info.content_id, info))
         .collect();
