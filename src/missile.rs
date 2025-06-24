@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // TODO: time as signed
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Missile {
     pub create: Option<MissileCreate>,
     pub launches: Vec<MissileLaunch>,
@@ -15,9 +15,20 @@ pub struct Missile {
 }
 
 impl Missile {
-    pub fn add_create(&mut self, mut create: MissileCreate, start: Time) {
+    pub fn empty() -> Self {
+        Self {
+            create: None,
+            launches: Vec::new(),
+            removes: Vec::new(),
+        }
+    }
+
+    pub fn create(mut create: MissileCreate, start: Time) -> Self {
         create.time = start.relative_saturate(create.time);
-        self.create = Some(create);
+        Self {
+            create: Some(create),
+            ..Self::empty()
+        }
     }
 
     pub fn add_launch(&mut self, mut launch: MissileLaunch, start: Time) {
@@ -49,7 +60,7 @@ pub fn extract_missiles<'a>(
     events: impl Iterator<Item = &'a Event> + Clone,
 ) -> Vec<Missile> {
     let start = Time::log_start(log);
-    let mut missiles = HashMap::<u32, Missile>::new();
+    let mut missiles = HashMap::<u32, Vec<Missile>>::new();
 
     for event in events {
         match event.clone().into_kind() {
@@ -57,25 +68,27 @@ pub fn extract_missiles<'a>(
                 missiles
                     .entry(create.tracking_id)
                     .or_default()
-                    .add_create(create, start);
+                    .push(Missile::create(create, start));
             }
             EventKind::MissileLaunch(launch) => {
-                missiles
-                    .entry(launch.tracking_id)
-                    .or_default()
-                    .add_launch(launch, start);
+                get_or_insert(&mut missiles, launch.tracking_id).add_launch(launch, start);
             }
             EventKind::MissileRemove(remove) => {
-                missiles
-                    .entry(remove.tracking_id)
-                    .or_default()
-                    .add_remove(remove, start);
+                get_or_insert(&mut missiles, remove.tracking_id).add_remove(remove, start);
             }
             _ => {}
         }
     }
 
-    let mut vec: Vec<_> = missiles.into_values().collect();
+    let mut vec: Vec<_> = missiles.into_values().flatten().collect();
     vec.sort_by_key(|missile| missile.first_aware());
     vec
+}
+
+fn get_or_insert(map: &mut HashMap<u32, Vec<Missile>>, id: u32) -> &mut Missile {
+    let entry = map.entry(id).or_default();
+    if entry.is_empty() {
+        entry.push(Missile::empty());
+    }
+    entry.last_mut().unwrap()
 }
