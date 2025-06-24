@@ -12,7 +12,7 @@ pub enum Effect {
     Ground {
         time: i32,
         effect: Option<EffectInfo>,
-        owner: Agent,
+        source: Agent,
         duration: u32,
         tracking_id: u32,
         location: Position,
@@ -22,7 +22,8 @@ pub enum Effect {
     Agent {
         time: i32,
         effect: Option<EffectInfo>,
-        agent: Agent,
+        source: Agent,
+        target: Agent,
         duration: u32,
         tracking_id: u32,
     },
@@ -54,14 +55,15 @@ pub fn extract_effects<'a>(
                     effect51::EffectLocation::Agent(id) => Effect::Agent {
                         time,
                         effect,
-                        agent: Agent::from_log(id, log),
+                        source: Agent::from_log(event.source.id, log),
+                        target: Agent::from_log(id, log),
                         duration,
                         tracking_id,
                     },
                     effect51::EffectLocation::Position(location) => Effect::Ground {
                         time,
                         effect,
-                        owner: Agent::from_log(event.owner.id, log),
+                        source: Agent::from_log(event.source.id, log),
                         duration,
                         tracking_id,
                         location,
@@ -74,7 +76,7 @@ pub fn extract_effects<'a>(
             EventKind::EffectGroundCreate(event) => Some(Effect::Ground {
                 time: start.relative(event.time),
                 effect: guids.get(&event.effect_id).cloned(),
-                owner: Agent::from_log(event.owner.id, log),
+                source: Agent::from_log(event.source.id, log),
                 duration: event.duration,
                 tracking_id: event.tracking_id,
                 location: event.location,
@@ -85,7 +87,8 @@ pub fn extract_effects<'a>(
             EventKind::EffectAgentCreate(event) => Some(Effect::Agent {
                 time: start.relative(event.time),
                 effect: guids.get(&event.effect_id).cloned(),
-                agent: Agent::from_log(event.agent.id, log),
+                source: Agent::from_log(event.source.id, log),
+                target: Agent::from_log(event.target.id, log),
                 duration: event.duration,
                 tracking_id: event.tracking_id,
             }),

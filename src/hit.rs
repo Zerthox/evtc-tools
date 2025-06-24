@@ -14,7 +14,7 @@ impl Hit {
     pub fn from_strike(log: &Log, event: &StrikeEvent, time: i32) -> Self {
         Self {
             time,
-            target: Agent::from_log(event.dst.id, log),
+            target: Agent::from_log(event.target.id, log),
             kind: event.strike,
             damage: event.total_damage,
         }

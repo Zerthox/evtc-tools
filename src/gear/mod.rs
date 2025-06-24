@@ -89,7 +89,7 @@ impl GearInfo {
             .events
             .iter()
             .filter_map(|event| event.try_extract::<BuffInitialEvent>())
-            .filter(|event| event.dst.id == self.id)
+            .filter(|event| event.target.id == self.id)
             .map(|event| GearBuff {
                 id: event.skill_id,
                 time: start.relative(event.time),
@@ -99,7 +99,7 @@ impl GearInfo {
             .events
             .iter()
             .filter_map(|event| event.try_extract::<BuffApplyEvent>())
-            .filter(|event| event.dst.id == self.id)
+            .filter(|event| event.target.id == self.id)
             .map(|event| GearBuff {
                 id: event.skill_id,
                 time: start.relative(event.time),

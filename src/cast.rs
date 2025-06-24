@@ -98,7 +98,7 @@ pub fn extract_casts<'a>(
 
                 EventKind::Strike(event) => {
                     let hit = Hit::from_strike(log, &event, time);
-                    let agent = event.src.id;
+                    let agent = event.source.id;
                     match casts
                         .get_mut(&(agent, skill_id))
                         .and_then(|casts| casts.last_mut())
