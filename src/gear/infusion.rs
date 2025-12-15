@@ -2,8 +2,6 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
 
 /// Buff granted by an Infusion.
-///
-/// Missing most cosmetic infusions.
 #[derive(
     Debug,
     Clone,
@@ -134,6 +132,12 @@ pub enum Infusion {
     #[serde(rename = "Abyssal Infusion (Vitality)")]
     AbyssalVitality = 61300,
 
+    #[serde(rename = "Amber Agony Lens (Left)")]
+    AmberAgonyLensLeft = 77532,
+
+    #[serde(rename = "Amber Agony Lens (Right)")]
+    AmberAgonyLensRight = 77682,
+
     #[serde(rename = "Arcane Flow Infusion (Concentration)")]
     ArcaneFlowConcentration = 71713,
 
@@ -157,6 +161,18 @@ pub enum Infusion {
 
     #[serde(rename = "Arcane Flow Infusion (Vitality)")]
     ArcaneFlowVitality = 71590,
+
+    #[serde(rename = "Aureate Agony Lens (Left)")]
+    AureateAgonyLensLeft = 77715,
+
+    #[serde(rename = "Aureate Agony Lens (Right)")]
+    AureateAgonyLensRight = 77563,
+
+    #[serde(rename = "Azure Agony Lens (Left)")]
+    AzureAgonyLensLeft = 77635,
+
+    #[serde(rename = "Azure Agony Lens (Right)")]
+    AzureAgonyLensRight = 77484,
 
     #[serde(rename = "Bloodstone Infusion (Concentration)")]
     BloodstoneConcentration = 75500,
@@ -257,6 +273,30 @@ pub enum Infusion {
     #[serde(rename = "Chatoyant Infusion (Precision)")]
     ChatoyantPrecision = 76053,
 
+    #[serde(rename = "Chromatic Bubbles (Concentration)")]
+    ChromaticBubblesConcentration = 77790,
+
+    #[serde(rename = "Chromatic Bubbles (Condition Damage)")]
+    ChromaticBubblesConditionDamage = 78327,
+
+    #[serde(rename = "Chromatic Bubbles (Expertise)")]
+    ChromaticBubblesExpertise = 79142,
+
+    #[serde(rename = "Chromatic Bubbles (Healing)")]
+    ChromaticBubblesHealing = 78663,
+
+    #[serde(rename = "Chromatic Bubbles (Power)")]
+    ChromaticBubblesPower = 77840,
+
+    #[serde(rename = "Chromatic Bubbles (Precision)")]
+    ChromaticBubblesPrecision = 78353,
+
+    #[serde(rename = "Chromatic Bubbles (Toughness)")]
+    ChromaticBubblesToughness = 78560,
+
+    #[serde(rename = "Chromatic Bubbles (Vitality)")]
+    ChromaticBubblesVitality = 78363,
+
     #[serde(rename = "Clockwork Infusion (Concentration)")]
     ClockworkConcentration = 68598,
 
@@ -283,6 +323,12 @@ pub enum Infusion {
 
     #[serde(rename = "Concentration WvW Infusion (Concentration)")]
     ConcentrationWvWConcentration = 49710,
+
+    #[serde(rename = "Crimson Agony Lens (Left)")]
+    CrimsonAgonyLensLeft = 77427,
+
+    #[serde(rename = "Crimson Agony Lens (Right)")]
+    CrimsonAgonyLensRight = 77415,
 
     #[serde(rename = "Crystal Infusion of Condition Damage (Condition Damage)")]
     CrystalofConditionDamageConditionDamage = 52967,
@@ -1103,6 +1149,12 @@ pub enum Infusion {
     #[serde(rename = "Resilient WvW Infusion")]
     ResilientWvW = 19065,
 
+    #[serde(rename = "Rose Agony Lens (Left)")]
+    RoseAgonyLensLeft = 77636,
+
+    #[serde(rename = "Rose Agony Lens (Right)")]
+    RoseAgonyLensRight = 77433,
+
     #[serde(rename = "Silent Symphony (Concentration)")]
     SilentSymphonyConcentration = 69473,
 
@@ -1183,6 +1235,18 @@ pub enum Infusion {
 
     #[serde(rename = "Toy-Shell Infusion (Vitality)")]
     ToyShellVitality = 53440,
+
+    #[serde(rename = "Vanishing Agony Lens (Left)")]
+    VanishingAgonyLensLeft = 77517,
+
+    #[serde(rename = "Vanishing Agony Lens (Right)")]
+    VanishingAgonyLensRight = 77628,
+
+    #[serde(rename = "Viridian Agony Lens (Left)")]
+    ViridianAgonyLensLeft = 77465,
+
+    #[serde(rename = "Viridian Agony Lens (Right)")]
+    ViridianAgonyLensRight = 77443,
 
     #[serde(rename = "Vital +5 Agony Infusion")]
     Vital5Agony = 15747,

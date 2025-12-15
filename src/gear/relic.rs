@@ -39,6 +39,9 @@ pub enum Relic {
     #[serde(rename = "Relic of Bloodstone")]
     Bloodstone = 76336,
 
+    #[serde(rename = "Relic of Castora")]
+    Castora = 78087,
+
     #[serde(rename = "Relic of Cerus")]
     Cerus = 70615,
 
@@ -135,6 +138,9 @@ pub enum Relic {
     #[serde(rename = "Relic of the Beehive")]
     Beehive = 74880,
 
+    #[serde(rename = "Relic of the Biomancer")]
+    Biomancer = 78041,
+
     #[serde(rename = "Relic of the Blightbringer")]
     Blightbringer = 74494,
 
@@ -180,6 +186,9 @@ pub enum Relic {
     #[serde(rename = "Relic of the Firebrand")]
     Firebrand = 70599,
 
+    #[serde(rename = "Relic of the First Revenant")]
+    FirstRevenant = 78005,
+
     #[serde(rename = "Relic of the Flock")]
     Flock = 70992,
 
@@ -216,6 +225,9 @@ pub enum Relic {
     #[serde(rename = "Relic of the Mirage")]
     Mirage = 70216,
 
+    #[serde(rename = "Relic of the Mist Stranger")]
+    MistStranger = 78806,
+
     #[serde(rename = "Relic of the Mists Tide")]
     MistsTide = 75356,
 
@@ -237,11 +249,17 @@ pub enum Relic {
     #[serde(rename = "Relic of the Phenom")]
     Phenom = 76433,
 
+    #[serde(rename = "Relic of the Pirate Queen")]
+    PirateQueen = 78328,
+
     #[serde(rename = "Relic of the Privateer")]
     Privateer = 75724,
 
     #[serde(rename = "Relic of the Reaper")]
     Reaper = 71287,
+
+    #[serde(rename = "Relic of the Scoundrel")]
+    Scoundrel = 78083,
 
     #[serde(rename = "Relic of the Scourge")]
     Scourge = 70532,
