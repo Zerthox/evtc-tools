@@ -33,16 +33,16 @@ pub fn map_hits_to_set<'a>(
     let weapons = WeaponMap::new(&log.events, agent);
 
     for event in events {
-        if let Some(event) = event.try_to_strike() {
-            if event.strike.dealt_damage() {
-                let new = HitWithSkill {
-                    skill: SkillIdName::from_log(log, event.skill_id),
-                    hit: Hit::from_strike(log, &event, start.relative(event.time)),
-                };
+        if let Some(event) = event.try_to_strike()
+            && event.strike.dealt_damage()
+        {
+            let new = HitWithSkill {
+                skill: SkillIdName::from_log(log, event.skill_id),
+                hit: Hit::from_strike(log, &event, start.relative(event.time)),
+            };
 
-                let set = weapons.set_at(event.time).unwrap_or(WeaponSet::Initial);
-                sets.entry(set).or_default().push(new);
-            }
+            let set = weapons.set_at(event.time).unwrap_or(WeaponSet::Initial);
+            sets.entry(set).or_default().push(new);
         }
     }
 
