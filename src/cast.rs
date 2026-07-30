@@ -1,5 +1,5 @@
-use crate::{util::to_tick_rounded, Agent, Hit, SkillIdName, Time};
-use evtc_parse::{Activation, Event, EventKind, Log};
+use crate::{Agent, Hit, SkillIdName, Time, util::to_tick_rounded};
+use evtc_parse::{Event, EventKind, Log, animation::AnimationProgress, event::AnimationStop};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -14,8 +14,9 @@ pub struct Cast {
     pub time: i32,
     pub skill: SkillIdName,
     pub agent: Agent,
-    pub kind: Option<Activation>,
-    pub duration: Option<i32>,
+    pub end: AnimationProgress,
+    pub duration_scaled: Option<i32>,
+    pub duration_unscaled: Option<i32>,
     pub hits: Vec<CastHit>,
 }
 
@@ -25,10 +26,17 @@ impl Cast {
             time,
             skill,
             agent,
-            kind: None,
-            duration: None,
+            end: AnimationProgress::None,
+            duration_scaled: None,
+            duration_unscaled: None,
             hits: Vec::new(),
         }
+    }
+
+    pub fn add_end(&mut self, event: &AnimationStop) {
+        self.end = event.progress;
+        self.duration_scaled = Some(event.duration_scaled);
+        self.duration_unscaled = Some(event.duration_unscaled);
     }
 
     pub fn add_hit(&mut self, mut hit: Hit) {
@@ -73,45 +81,37 @@ pub fn extract_casts<'a>(
             let time = start.relative(event.time);
 
             match event.clone().into_kind() {
-                EventKind::Activation(event) => {
-                    let agent_id = event.agent.id;
-                    match event.activation {
-                        Activation::Start => {
-                            let agent = Agent::from_log(agent_id, log);
-                            let cast = Cast::new(skill, agent, time);
-                            casts.entry((agent_id, skill_id)).or_default().push(cast);
-                        }
-                        kind @ (Activation::Reset
-                        | Activation::CancelCancel
-                        | Activation::CancelFire) => {
-                            if let Some(cast) = casts
-                                .get_mut(&(agent_id, skill_id))
-                                .and_then(|casts| casts.last_mut())
-                            {
-                                cast.kind = Some(kind);
-                                cast.duration = Some(event.duration);
-                            }
-                        }
-                        _ => {}
-                    }
+                EventKind::AnimationStart(event) => {
+                    let agent = Agent::from_agent(&event.agent, log);
+                    let cast = Cast::new(skill, agent, time);
+                    casts
+                        .entry((event.agent.id, skill_id))
+                        .or_default()
+                        .push(cast);
                 }
-
-                EventKind::Strike(event) => {
-                    let hit = Hit::from_strike(log, &event, time);
-                    let agent = event.source.id;
-                    match casts
-                        .get_mut(&(agent, skill_id))
+                EventKind::AnimationStop(event) => {
+                    if let Some(cast) = casts
+                        .get_mut(&(event.agent.id, skill_id))
                         .and_then(|casts| casts.last_mut())
                     {
-                        Some(cast) => cast.add_hit(hit),
-                        None => hits_without_cast.push(StandaloneHit {
-                            hit,
-                            skill,
-                            agent: Agent::from_log(agent, log),
-                        }),
+                        cast.add_end(&event);
                     }
                 }
-
+                EventKind::Combat(event) => {
+                    if let Some(hit) = Hit::try_from_event(log, &event, time) {
+                        match casts
+                            .get_mut(&(event.source.id, skill_id))
+                            .and_then(|casts| casts.last_mut())
+                        {
+                            Some(cast) => cast.add_hit(hit),
+                            None => hits_without_cast.push(StandaloneHit {
+                                hit,
+                                skill,
+                                agent: Agent::from_agent(&event.source, log),
+                            }),
+                        }
+                    }
+                }
                 _ => {}
             }
         }

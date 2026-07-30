@@ -9,9 +9,8 @@ pub use self::{infusion::*, item::*, relic::*, rune::*, sigil::*, trinket::*};
 
 use crate::{Time, WeaponMap, WeaponSet};
 use evtc_parse::{
-    self as evtc,
-    buff::{BuffApplyEvent, BuffCategory, BuffCategoryOld, BuffInfo, BuffInitialEvent},
-    Log, Profession, Specialization, StateChange,
+    self as evtc, Log, Profession, Specialization, StateChange,
+    buff::{BuffApply, BuffCategory, BuffCategoryOld, BuffInfo, BuffInitialEvent},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -98,7 +97,7 @@ impl GearInfo {
         let buff_applies = log
             .events
             .iter()
-            .filter_map(|event| event.try_extract::<BuffApplyEvent>())
+            .filter_map(|event| event.try_extract::<BuffApply>())
             .filter(|event| event.target.id == self.id)
             .map(|event| GearBuff {
                 id: event.skill_id,

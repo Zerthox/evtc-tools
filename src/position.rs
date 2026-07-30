@@ -1,5 +1,5 @@
 use crate::{Agent, Time};
-use evtc_parse::{position::PositionEvent, Event, Log};
+use evtc_parse::{Event, Log, position::PositionEvent};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,7 +20,7 @@ pub fn extract_positions<'a>(
         .filter_map(|event| event.try_extract::<PositionEvent>())
         .map(|event| Position {
             time: start.relative(event.time),
-            agent: Agent::from_log(event.agent.id, log),
+            agent: Agent::from_agent(&event.agent, log),
             x: event.position.x,
             y: event.position.y,
             z: event.position.z,
