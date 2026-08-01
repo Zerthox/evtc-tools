@@ -28,4 +28,12 @@ impl Agent {
     pub fn from_id(id: u64, log: &Log) -> Self {
         Self::new(id, None, log.agent_name(id).and_then(|names| names.first()))
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.id == 0 && matches!(self.inst_id, None | Some(0)) && self.name.is_none()
+    }
+
+    pub fn non_empty(self) -> Option<Self> {
+        (!self.is_empty()).then_some(self)
+    }
 }
